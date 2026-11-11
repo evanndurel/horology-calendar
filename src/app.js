@@ -4,6 +4,7 @@ import MAP from './map.json';
 import { geoNaturalEarth1 } from 'd3-geo';
 
 const D = { map: { base: Object.values(MAP.c).join(''), hi: MAP.c }, box: MAP.box };
+const BASE_PATHS = Object.values(MAP.c).map((d) => '<path d="' + d + '"/>').join('');
 const PROJ = geoNaturalEarth1().fitExtent([[10, 10], [990, 490]], { type: 'Sphere' });
 const SITE = (import.meta.env.VITE_SITE_URL || location.origin).replace(/\/$/, '');
 const EV = [];
@@ -303,7 +304,7 @@ function pageMap() {
     + '<div class="in d1" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px"><h1 class="big">The watch world, <em class="g">mapped.</em></h1><p style="margin:0;font-size:15px;color:var(--muted-d);max-width:380px;line-height:1.6">Choose a country, then a gold point to see what is happening there.</p></div>'
     + '<div class="in d2" style="margin-top:44px;display:flex;flex-wrap:wrap;gap:32px;align-items:stretch"><div style="flex:999 1 720px;min-width:0;display:flex;flex-direction:column;gap:18px">'
     + '<nav aria-label="Map breadcrumb" id="crumbs" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-height:32px"></nav>'
-    + '<div class="mapwrap"><div class="mapbox" id="mapbox"><div class="zw" id="zg"><svg class="ml" viewBox="0 0 1000 500" aria-hidden="true"><path id="mbase" d="' + D.map.base + '" fill="#152338" stroke="#26364E" stroke-width="0.7" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>' + hi + '</svg><svg class="ml glow" viewBox="0 0 1000 500" aria-hidden="true">' + glow + '</svg><svg class="ml pl" viewBox="0 0 1000 500" aria-hidden="true">' + pins + '</svg></div><div class="hint" aria-hidden="true" style="left:' + (PINS.Geneva[0] / 10) + '%;top:' + (PINS.Geneva[1] / 5) + '%"><span class="tap"></span><span class="tap t2"></span><svg class="hpoint" width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#0A1322" stroke-width="1.2" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l.5-.1a1.5 1.5 0 0 1 2.5 1.1l.3-.1a1.4 1.4 0 0 1 2.2 1.1l.2 0a1.4 1.4 0 0 1 2 1.3V17a5 5 0 0 1-5 5h-1.6a5 5 0 0 1-4-2l-3.1-4.2a1.4 1.4 0 0 1 2.1-1.8L9 15z"/></svg><span class="hbub">Start here · <b>Geneva</b> · ' + (cnt.Geneva || 0) + ' events</span></div>'
+    + '<div class="mapwrap"><div class="mapbox" id="mapbox"><svg class="ml" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg"><g fill="#152338" stroke="#26364E" stroke-width="0.7" vector-effect="non-scaling-stroke" stroke-linejoin="round" class="nss">' + BASE_PATHS + '</g>' + hi + '</g></svg><svg class="ml glow" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg">' + glow + '</g></svg><svg class="ml pl" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg">' + pins + '</g></svg><div class="hint" aria-hidden="true" style="left:' + (PINS.Geneva[0] / 10) + '%;top:' + (PINS.Geneva[1] / 5) + '%"><span class="tap"></span><span class="tap t2"></span><svg class="hpoint" width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#0A1322" stroke-width="1.2" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l.5-.1a1.5 1.5 0 0 1 2.5 1.1l.3-.1a1.4 1.4 0 0 1 2.2 1.1l.2 0a1.4 1.4 0 0 1 2 1.3V17a5 5 0 0 1-5 5h-1.6a5 5 0 0 1-4-2l-3.1-4.2a1.4 1.4 0 0 1 2.1-1.8L9 15z"/></svg><span class="hbub">Start here · <b>Geneva</b> · ' + (cnt.Geneva || 0) + ' events</span></div>'
     + '<div class="hint2" aria-hidden="true"><span class="dot"></span>Click a gold country or point to explore</div>'
     + '<div id="callout"></div><button id="worldbtn" data-act="mworld" class="btn btn-ghost" style="display:none;position:absolute;top:16px;right:16px;min-height:40px;padding:0 16px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;background:rgba(10,19,34,.85);z-index:4">World view</button></div>'
     + '<div class="mleg" style="position:absolute;left:18px;bottom:16px;display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--muted-d2);pointer-events:none"><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:12px;height:8px;border-radius:2px;background:#4A4130;box-shadow:inset 0 0 0 1px #8A7448"></span>Country with events</span><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#E4CF9F"></span>City</span><span style="display:inline-flex;align-items:center;gap:8px"><span class="dot"></span>Event happening now</span></div></div>'
@@ -323,16 +324,15 @@ function updateMap() {
     tx = Math.min(0, Math.max(1000 - 1000 * k, 500 - k * (x0 + x1) / 2));
     ty = Math.min(0, Math.max(500 - 500 * k, 250 - k * (y0 + y1) / 2));
   }
-  const zg = document.getElementById('zg'); if (!zg) return;
+  const zgs = document.querySelectorAll('#mapbox .zg'); if (!zgs.length) return;
   document.getElementById('mapbox').classList.toggle('idle', !M.country && !M.touched);
-  zg.style.transform = 'translate(' + (tx / 10) + '%,' + (ty / 5) + '%) scale(' + k + ')';
-  const mb = document.getElementById('mbase'); if (mb) mb.setAttribute('stroke-width', (0.7 / k).toFixed(3));
+  zgs.forEach((g) => { g.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')'; });
   document.querySelectorAll('.cty').forEach((p) => {
     const c = p.dataset.cc, has = !!byC[c], on = c === M.country;
     p.classList.toggle('has', has);
     p.setAttribute('fill', on ? '#5C4E2E' : has ? (M.country ? '#2A2E2C' : '#4A4130') : '#152338');
     p.setAttribute('stroke', on ? '#E4CF9F' : has ? (M.country ? '#4A4636' : '#8A7448') : '#26364E');
-    p.setAttribute('stroke-width', ((on ? 1.6 : 0.8) / k).toFixed(3));
+    p.setAttribute('stroke-width', on ? '1.6' : '0.8');
   });
   document.querySelectorAll('.pin').forEach((g) => {
     const n = g.dataset.city, [x, y, c] = PINS[n], cnt = (byCity[n] || []).length;
