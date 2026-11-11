@@ -326,7 +326,9 @@ function updateMap() {
   }
   const zgs = document.querySelectorAll('#mapbox .zg'); if (!zgs.length) return;
   document.getElementById('mapbox').classList.toggle('idle', !M.country && !M.touched);
-  zgs.forEach((g) => { g.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')'; });
+  const nt = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
+  if (zgs[0].style.transform && zgs[0].style.transform !== nt) { const mbx = document.getElementById('mapbox'); mbx.classList.remove('swap'); void mbx.offsetWidth; mbx.classList.add('swap'); }
+  zgs.forEach((g) => { g.style.transform = nt; });
   document.querySelectorAll('.cty').forEach((p) => {
     const c = p.dataset.cc, has = !!byC[c], on = c === M.country;
     p.classList.toggle('has', has);
