@@ -10,6 +10,8 @@ const SITE = (import.meta.env.VITE_SITE_URL || location.origin).replace(/\/$/, '
 const EV = [];
 const byId = {};
 let PINS = {};
+let CITYLL = {};
+const GLM = { ok: null, api: null, failed: false, loading: false };
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ML = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAY = 864e5;
@@ -35,7 +37,8 @@ function fromRow(r) {
 }
 function setEvents(rows) {
   EV.length = 0; Object.keys(byId).forEach((k) => { delete byId[k]; }); PINS = {};
-  rows.forEach((r) => { const e = fromRow(r); EV.push(e); byId[e.id] = e; if (e.cc && !CN[e.cc]) CN[e.cc] = e.country; });
+  CITYLL = {};
+  rows.forEach((r) => { const e = fromRow(r); EV.push(e); if (e.lat != null && e.lon != null && !CITYLL[e.city]) CITYLL[e.city] = [e.lon, e.lat]; byId[e.id] = e; if (e.cc && !CN[e.cc]) CN[e.cc] = e.country; });
   EV.forEach((e) => { if (e.lat != null && e.lon != null && !PINS[e.city]) { const [x, y] = PROJ([e.lon, e.lat]); PINS[e.city] = [+x.toFixed(1), +y.toFixed(1), e.cc]; } });
 }
 async function loadEvents() { setEvents(await api.listEvents()); }
@@ -304,13 +307,38 @@ function pageMap() {
     + '<div class="in d1" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px"><h1 class="big">The watch world, <em class="g">mapped.</em></h1><p style="margin:0;font-size:15px;color:var(--muted-d);max-width:380px;line-height:1.6">Choose a country, then a gold point to see what is happening there.</p></div>'
     + '<div class="in d2" style="margin-top:44px;display:flex;flex-wrap:wrap;gap:32px;align-items:stretch"><div style="flex:999 1 720px;min-width:0;display:flex;flex-direction:column;gap:18px">'
     + '<nav aria-label="Map breadcrumb" id="crumbs" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-height:32px"></nav>'
-    + '<div class="mapwrap"><div class="mapbox" id="mapbox"><svg class="ml" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg"><g fill="#152338" stroke="#26364E" stroke-width="0.7" vector-effect="non-scaling-stroke" stroke-linejoin="round" class="nss">' + BASE_PATHS + '</g>' + hi + '</g></svg><svg class="ml glow" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg">' + glow + '</g></svg><svg class="ml pl" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg">' + pins + '</g></svg><div class="hint" aria-hidden="true" style="left:' + (PINS.Geneva[0] / 10) + '%;top:' + (PINS.Geneva[1] / 5) + '%"><span class="tap"></span><span class="tap t2"></span><svg class="hpoint" width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#0A1322" stroke-width="1.2" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l.5-.1a1.5 1.5 0 0 1 2.5 1.1l.3-.1a1.4 1.4 0 0 1 2.2 1.1l.2 0a1.4 1.4 0 0 1 2 1.3V17a5 5 0 0 1-5 5h-1.6a5 5 0 0 1-4-2l-3.1-4.2a1.4 1.4 0 0 1 2.1-1.8L9 15z"/></svg><span class="hbub">Start here · <b>Geneva</b> · ' + (cnt.Geneva || 0) + ' events</span></div>'
+    + '<div class="mapwrap"><div class="mapbox" id="mapbox">' + (useGL() ? '<div class="glmap" id="glmap"></div>' : '<svg class="ml" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg"><g fill="#152338" stroke="#26364E" stroke-width="0.7" vector-effect="non-scaling-stroke" stroke-linejoin="round" class="nss">' + BASE_PATHS + '</g>' + hi + '</g></svg><svg class="ml glow" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg">' + glow + '</g></svg><svg class="ml pl" viewBox="0 0 1000 500" aria-hidden="true"><g class="zg">' + pins + '</g></svg>') + '<div class="hint" id="mhint" aria-hidden="true" style="left:' + (PINS.Geneva ? PINS.Geneva[0] / 10 : 50) + '%;top:' + (PINS.Geneva ? PINS.Geneva[1] / 5 : 50) + '%"><span class="tap"></span><span class="tap t2"></span><svg class="hpoint" width="30" height="30" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#0A1322" stroke-width="1.2" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10l.5-.1a1.5 1.5 0 0 1 2.5 1.1l.3-.1a1.4 1.4 0 0 1 2.2 1.1l.2 0a1.4 1.4 0 0 1 2 1.3V17a5 5 0 0 1-5 5h-1.6a5 5 0 0 1-4-2l-3.1-4.2a1.4 1.4 0 0 1 2.1-1.8L9 15z"/></svg><span class="hbub">Start here · <b>Geneva</b> · ' + (cnt.Geneva || 0) + ' events</span></div>'
     + '<div class="hint2" aria-hidden="true"><span class="dot"></span>Click a gold country or point to explore</div>'
     + '<div id="callout"></div><button id="worldbtn" data-act="mworld" class="btn btn-ghost" style="display:none;position:absolute;top:16px;right:16px;min-height:40px;padding:0 16px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;background:rgba(10,19,34,.85);z-index:4">World view</button></div>'
     + '<div class="mleg" style="position:absolute;left:18px;bottom:16px;display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--muted-d2);pointer-events:none"><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:12px;height:8px;border-radius:2px;background:#4A4130;box-shadow:inset 0 0 0 1px #8A7448"></span>Country with events</span><span style="display:inline-flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#E4CF9F"></span>City</span><span style="display:inline-flex;align-items:center;gap:8px"><span class="dot"></span>Event happening now</span></div></div>'
     + '<div role="group" aria-label="Choose a country" id="chips" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>'
     + '<aside aria-label="Details" aria-live="polite" id="mpanel" style="flex:1 1 340px;border:1px solid var(--line-d);border-radius:6px;padding:32px;background:var(--navy2)"></aside></div></main>'
     + footer(false).replace('<footer class="ft">', '<footer class="ft" style="border-color:var(--line-d)">').replace(/color:var\(--ink\)/g, 'color:#C5CCD6').replace('class="ftb"', 'class="ftb" style="border-color:var(--line-d)"') + '</div>';
+}
+function renderCallout(byCity, pos) {
+  const co = document.getElementById('callout');
+  if (M.city && byCity[M.city] && !M.all) {
+    const { left, top } = pos(M.city); const below = top < 50; const list = byCity[M.city];
+    co.innerHTML = '<div class="callout' + (below ? ' below' : '') + '" role="dialog" aria-label="' + esc(M.city) + '" style="left:' + Math.max(14, Math.min(86, left)) + '%;top:' + top + '%;max-height:calc(' + (below ? 100 - top : top) + '% - 34px)">'
+      + '<div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 10px;border-bottom:1px solid #EFEDE8"><div><div class="k" style="font-size:10px;color:#8A6A2E">' + list.length + (list.length === 1 ? ' event here' : ' events here') + '</div><div class="serif" style="margin-top:4px;font-size:24px;line-height:1">' + esc(M.city) + '</div></div><button data-act="mclose" aria-label="Close" style="width:32px;height:32px;border:0;border-radius:50%;background:#F3F2EE;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
+      + '<div style="flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 0">' + list.slice(0, 3).map((e) => '<button class="cev' + (e.id === M.ev ? ' on' : '') + '" data-act="mev" data-v="' + e.id + '"><span style="flex:0 0 auto;width:3px;align-self:stretch;border-radius:2px;background:' + (e.t === 'auction' ? '#9A8F7A' : TY[e.t][1]) + '"></span><span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600;line-height:1.3">' + esc(e.n) + '</span><span style="font-size:12px;color:var(--muted)">' + range(e.s, e.e) + (e.venue ? ' · ' + esc(e.venue) : '') + '</span></span></button>').join('') + '</div>'
+      + (list.length > 3 ? '<button data-act="mall" style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:0 16px;border:0;border-top:1px solid #EFEDE8;border-radius:0 0 6px 6px;background:#FAF9F7;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--navy);cursor:pointer">See all ' + list.length + ' events ' + ARR + '</button>' : '')
+      + '<span aria-hidden="true" style="position:absolute;left:50%;' + (below ? 'top:-7px' : 'bottom:-7px') + ';width:14px;height:14px;margin-left:-7px;background:#fff;transform:rotate(45deg)"></span></div>';
+  } else co.innerHTML = '';
+}
+function useGL() { if (GLM.failed) return false; if (GLM.ok === null) { try { const c = document.createElement('canvas'); GLM.ok = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (x) { GLM.ok = false; } } return GLM.ok; }
+function startGL(el) {
+  if (GLM.loading) return; GLM.loading = true;
+  import('./worldmap.js').then((m) => m.createWorldMap(el, {
+    onCountry: (cc) => { M.touched = true; Object.assign(M, { country: cc, city: '', ev: '', all: false }); updateMap(); },
+    onCity: (c) => { M.touched = true; const lst = upcoming().filter((e) => e.city === c); const small = document.getElementById('mapbox').clientWidth < 560; Object.assign(M, { country: lst[0] ? lst[0].cc : M.country, city: c, ev: lst.length === 1 ? lst[0].id : '', all: small && lst.length > 1 }); updateMap(); if (small) setTimeout(() => document.getElementById('mpanel').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300); },
+  })).then((api) => {
+    GLM.loading = false;
+    if (!document.body.contains(el)) { api.destroy(); return; }
+    GLM.api = api; GLM.el = el;
+    const h = document.getElementById('mhint'); if (h && CITYLL.Geneva) { const p = api.project(CITYLL.Geneva[0], CITYLL.Geneva[1]); h.style.left = (p.x / p.w * 100) + '%'; h.style.top = (p.y / p.h * 100) + '%'; }
+    updateMap();
+  }).catch((x) => { console.warn('WebGL map unavailable, using the SVG map', x); GLM.loading = false; GLM.failed = true; if (location.pathname === '/map') route(); });
 }
 function updateMap() {
   const up = mapEvents(); const byC = {}, byCity = {};
@@ -324,11 +352,28 @@ function updateMap() {
     tx = Math.min(0, Math.max(1000 - 1000 * k, 500 - k * (x0 + x1) / 2));
     ty = Math.min(0, Math.max(500 - 500 * k, 250 - k * (y0 + y1) / 2));
   }
-  const zgs = document.querySelectorAll('#mapbox .zg'); if (!zgs.length) return;
+  const glEl = document.getElementById('glmap');
+  const zgs = document.querySelectorAll('#mapbox .zg'); if (!zgs.length && !glEl) return;
   document.getElementById('mapbox').classList.toggle('idle', !M.country && !M.touched);
+  let place = (x, y) => ({ left: (k * x + tx) / 10, top: (k * y + ty) / 5 });
+  if (glEl) {
+    if (!GLM.api) { startGL(glEl); return; }
+    const cities = Object.keys(byCity).filter((n) => CITYLL[n]).map((n) => ({ city: n, cc: byCity[n][0].cc, lon: CITYLL[n][0], lat: CITYLL[n][1], count: byCity[n].length, live: byCity[n].some(live), act: n === M.city }));
+    let bounds = null;
+    if (M.country && GLM.api.boxes[M.country]) {
+      let [[a, b2], [c2, d2]] = GLM.api.boxes[M.country];
+      cities.filter((x) => x.cc === M.country).forEach((x) => { a = Math.min(a, x.lon); c2 = Math.max(c2, x.lon); b2 = Math.min(b2, x.lat); d2 = Math.max(d2, x.lat); });
+      const padX = Math.max(0, 1.2 - (c2 - a)) / 2, padY = Math.max(0, 0.8 - (d2 - b2)) / 2;
+      bounds = [[a - padX, b2 - padY], [c2 + padX, d2 + padY]];
+    }
+    document.getElementById('callout').innerHTML = '';
+    GLM.api.update({ hasCountries: new Set(Object.keys(byC)), country: M.country, cities, bounds }, () => { if (document.getElementById('glmap')) renderCallout(byCity, (n) => { const p = GLM.api.project(CITYLL[n][0], CITYLL[n][1]); return { left: p.x / p.w * 100, top: p.y / p.h * 100 }; }); });
+  } else {
   const nt = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
   if (zgs[0].style.transform && zgs[0].style.transform !== nt) { const mbx = document.getElementById('mapbox'); mbx.classList.remove('swap'); void mbx.offsetWidth; mbx.classList.add('swap'); }
   zgs.forEach((g) => { g.style.transform = nt; });
+  }
+  if (!glEl) {
   document.querySelectorAll('.cty').forEach((p) => {
     const c = p.dataset.cc, has = !!byC[c], on = c === M.country;
     p.classList.toggle('has', has);
@@ -347,21 +392,15 @@ function updateMap() {
     const pc = g.querySelector('.pc'); pc.style.r = r + 'px'; pc.style.strokeWidth = (1.2 / k) + 'px'; pc.setAttribute('fill', act ? '#fff' : '#E4CF9F');
     const t = g.querySelector('.lbl'); t.setAttribute('x', x + r + 4 / k); t.setAttribute('y', y + 4 / k); t.setAttribute('font-size', 13 / k); t.setAttribute('stroke-width', 3 / k); t.style.opacity = M.country && c === M.country ? 1 : 0;
   });
+  }
   document.getElementById('worldbtn').style.display = M.country ? 'inline-flex' : 'none';
   const crumb = (txt, act, on) => '<button class="crumb' + (on ? ' on' : '') + '" data-act="' + act + '">' + esc(txt) + '</button>';
   const se = byId[M.ev];
   document.getElementById('crumbs').innerHTML = crumb('World', 'mworld', !M.country) + (M.country ? '<span aria-hidden="true" style="color:#4A5A72">/</span>' + crumb(CN[M.country], 'mback', !se) : '') + (se ? '<span aria-hidden="true" style="color:#4A5A72">/</span><span class="k" style="color:var(--gold);font-size:12px">' + esc(se.n) + '</span>' : '');
   const codes = Object.keys(byC).sort((a, b) => byC[b].length - byC[a].length || CN[a].localeCompare(CN[b]));
   document.getElementById('chips').innerHTML = codes.map((c) => '<button class="chip' + (c === M.country ? ' on' : '') + '" data-act="mc" data-v="' + c + '" aria-pressed="' + (c === M.country) + '">' + CN[c] + '<i>' + byC[c].length + '</i></button>').join('');
-  const co = document.getElementById('callout');
-  if (M.city && byCity[M.city] && !M.all) {
-    const [x, y] = PINS[M.city]; const left = (k * x + tx) / 10, top = (k * y + ty) / 5; const below = top < 50; const list = byCity[M.city];
-    co.innerHTML = '<div class="callout' + (below ? ' below' : '') + '" role="dialog" aria-label="' + esc(M.city) + '" style="left:' + Math.max(14, Math.min(86, left)) + '%;top:' + top + '%;max-height:calc(' + (below ? 100 - top : top) + '% - 34px)">'
-      + '<div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 10px;border-bottom:1px solid #EFEDE8"><div><div class="k" style="font-size:10px;color:#8A6A2E">' + list.length + (list.length === 1 ? ' event here' : ' events here') + '</div><div class="serif" style="margin-top:4px;font-size:24px;line-height:1">' + esc(M.city) + '</div></div><button data-act="mclose" aria-label="Close" style="width:32px;height:32px;border:0;border-radius:50%;background:#F3F2EE;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
-      + '<div style="flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px 0">' + list.slice(0, 3).map((e) => '<button class="cev' + (e.id === M.ev ? ' on' : '') + '" data-act="mev" data-v="' + e.id + '"><span style="flex:0 0 auto;width:3px;align-self:stretch;border-radius:2px;background:' + (e.t === 'auction' ? '#9A8F7A' : TY[e.t][1]) + '"></span><span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600;line-height:1.3">' + esc(e.n) + '</span><span style="font-size:12px;color:var(--muted)">' + range(e.s, e.e) + (e.venue ? ' · ' + esc(e.venue) : '') + '</span></span></button>').join('') + '</div>'
-      + (list.length > 3 ? '<button data-act="mall" style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:0 16px;border:0;border-top:1px solid #EFEDE8;border-radius:0 0 6px 6px;background:#FAF9F7;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--navy);cursor:pointer">See all ' + list.length + ' events ' + ARR + '</button>' : '')
-      + '<span aria-hidden="true" style="position:absolute;left:50%;' + (below ? 'top:-7px' : 'bottom:-7px') + ';width:14px;height:14px;margin-left:-7px;background:#fff;transform:rotate(45deg)"></span></div>';
-  } else co.innerHTML = '';
+  if (!glEl) renderCallout(byCity, (n) => place(PINS[n][0], PINS[n][1]));
+
   const panel = document.getElementById('mpanel');
   if (se) {
     panel.innerHTML = '<div class="pane" style="border:0;padding:0"><button class="crumb" data-act="mback" style="display:inline-flex;align-items:center;gap:8px">← ' + esc(CN[M.country]) + '</button><div style="margin-top:18px"><span style="display:inline-flex;align-items:center;min-height:26px;padding:0 12px;border-radius:999px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;background:' + (se.t === 'auction' ? '#9A8F7A' : TY[se.t][1]) + ';color:#fff">' + esc(se.tl) + '</span></div><h2 class="serif" style="margin:18px 0 0;font-size:36px;line-height:1.08">' + esc(se.n) + '</h2><p style="margin:12px 0 0;font-size:16px;font-weight:600;color:var(--gold)">' + range(se.s, se.e) + '</p><div style="margin-top:12px;display:inline-flex;align-items:center;gap:10px;font-size:13px;color:var(--muted-d)"><span class="dot"></span>' + whenOf(se) + '</div>'
@@ -720,9 +759,10 @@ function route() {
   const p = location.pathname.replace(/\/+$/, '') || '/';
   const app = document.getElementById('app');
   const H = 'Horology Calendar';
+  if (GLM.api && p !== '/map') { GLM.api.destroy(); GLM.api = null; }
   if (p.startsWith('/event/')) { const id = decodeURIComponent(p.slice(7)); const e = byId[id]; app.innerHTML = pageEvent(id); setMeta((e ? e.n + ' · ' : 'Event not found · ') + H, e ? e.n + ': ' + range(e.s, e.e) + ', ' + place(e) + '. ' + (e.desc || 'Dates, venue and official website.') : ''); if (e) eventJsonLd(e); tickCountdown(); }
   else if (p === '/agenda') { app.innerHTML = pageAgenda(); renderAgenda(); setMeta('Agenda · ' + H, 'Month-by-month agenda of watch fairs, collector shows, auctions and watch weeks worldwide.'); }
-  else if (p === '/map') { app.innerHTML = pageMap(); updateMap(); setMeta('World map · ' + H, 'Explore watch fairs and events around the world on an interactive map.'); }
+  else if (p === '/map') { if (GLM.api) { GLM.api.destroy(); GLM.api = null; } app.innerHTML = pageMap(); updateMap(); setMeta('World map · ' + H, 'Explore watch fairs and events around the world on an interactive map.'); }
   else if (p === '/add') { app.innerHTML = pageAdd(); window.__addT = Date.now(); setMeta('Add your event · ' + H, 'Organisers: list your watch fair or event for free in a few minutes.'); }
   else if (p === '/about') { app.innerHTML = pageAbout(); setMeta('About · ' + H, 'A free, open calendar for the watch world. An initiative of 289 Consulting.'); }
   else if (p === '/legal') { app.innerHTML = pageLegal(); setMeta('Legal & privacy · ' + H, 'Legal notice, terms of publication and privacy policy of Horology Calendar.'); }
