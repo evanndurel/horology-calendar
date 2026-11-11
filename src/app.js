@@ -803,17 +803,20 @@ window.addEventListener('popstate', () => route());
 window.addEventListener('scroll', () => { const h = document.documentElement; const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight); document.getElementById('prog').style.width = (p * 100) + '%'; }, { passive: true });
 setInterval(() => { tickClock(); tickCountdown(); }, 1000);
 async function boot() {
-  try { await loadEvents(); } catch (x) { document.getElementById('app').innerHTML = '<div style="padding:120px 24px;text-align:center;font-family:Inter,sans-serif"><h1 style="font-weight:500">Horology Calendar</h1><p>The calendar could not be loaded. Please refresh the page in a moment.</p></div>'; return; }
-  if (location.pathname === '/admin') { try { await admLoad(); } catch (x) {} }
-  loader();
-}
-function loader() {
+  // Start the intro straight away (first visit of the home page), while the events load underneath.
   let seen = false; try { seen = sessionStorage.getItem('hc-intro') === '1'; sessionStorage.setItem('hc-intro', '1'); } catch (x) {}
-  if (seen || location.pathname !== '/') { firstLoad = false; route(); return; }
-  const word = 'Horology Calendar'.split('').map((c, i) => c === ' ' ? '<span>&#160;</span>' : '<span class="ch" style="animation-delay:' + (200 + i * 100) + 'ms">' + c + '</span>').join('');
-  const l = document.createElement('div'); l.className = 'ld'; l.setAttribute('role', 'status'); l.setAttribute('aria-label', 'Loading Horology Calendar');
-  l.innerHTML = '<div class="bar"></div><div style="padding:0 16px"><div class="word" aria-hidden="true">' + word + '</div><div class="sub">The international watch fair calendar</div></div>';
-  introDone = false; document.documentElement.classList.add('intro'); document.body.appendChild(l); route();
-  setTimeout(() => { l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); }, 2900);
+  const intro = !seen && location.pathname === '/';
+  const t0 = Date.now(); let l = null;
+  if (intro) {
+    const word = 'Horology Calendar'.split('').map((c, i) => c === ' ' ? '<span>&#160;</span>' : '<span class="ch" style="animation-delay:' + (200 + i * 100) + 'ms">' + c + '</span>').join('');
+    l = document.createElement('div'); l.className = 'ld'; l.setAttribute('role', 'status'); l.setAttribute('aria-label', 'Loading Horology Calendar');
+    l.innerHTML = '<div class="bar"></div><div style="padding:0 16px"><div class="word" aria-hidden="true">' + word + '</div><div class="sub">The international watch fair calendar</div></div>';
+    introDone = false; document.documentElement.classList.add('intro'); document.body.appendChild(l);
+  }
+  try { await loadEvents(); } catch (x) { if (l) l.remove(); document.documentElement.classList.remove('intro'); document.getElementById('app').innerHTML = '<div style="padding:120px 24px;text-align:center;font-family:Inter,sans-serif"><h1 style="font-weight:500">Horology Calendar</h1><p>The calendar could not be loaded. Please refresh the page in a moment.</p></div>'; return; }
+  if (location.pathname === '/admin') { try { await admLoad(); } catch (x) {} }
+  if (!intro) { firstLoad = false; route(); return; }
+  route();
+  setTimeout(() => { l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); }, Math.max(0, 2900 - (Date.now() - t0)));
 }
 boot();
