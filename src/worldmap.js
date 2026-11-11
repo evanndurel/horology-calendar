@@ -79,7 +79,7 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
     map.getCanvas().style.cursor = c.length ? 'pointer' : '';
   });
   // labels appear for every city once the visitor zooms in far enough
-  const syncLabels = () => el.classList.toggle('zl', map.getZoom() >= 3.2);
+  const syncLabels = () => el.classList.toggle('zl', map.getZoom() >= 4.5);
   map.on('zoom', syncLabels);
   map.on('movestart', (e) => { if (e.originalEvent) st.key = null; });
   map.on('move', (e) => { if (onMove) onMove(!!e.originalEvent); });
@@ -107,7 +107,7 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
       st.markers.forEach((m) => m.remove()); st.markers = [];
       view.cities.forEach((c) => {
         if (c.live && (!zoomed || c.cc === view.country)) { const d = document.createElement('div'); d.innerHTML = '<span class="glpulse"></span>'; st.markers.push(new maplibregl.Marker({ element: d }).setLngLat([c.lon, c.lat]).addTo(map)); }
-        { const d = document.createElement('div'); d.className = 'gllabel' + (zoomed && c.cc === view.country ? ' on' : '') + (zoomed && c.cc !== view.country ? ' dim' : ''); d.textContent = c.city + (c.count > 1 ? ' · ' + c.count : ''); st.markers.push(new maplibregl.Marker({ element: d, anchor: 'left', offset: [10, 0] }).setLngLat([c.lon, c.lat]).addTo(map)); }
+        { const d = document.createElement('div'); d.className = 'gllabel' + (zoomed && c.cc === view.country ? ' on' : '') + (zoomed && c.cc !== view.country ? ' dim' : ''); const t = document.createElement('span'); t.textContent = c.city + (c.count > 1 ? ' · ' + c.count : ''); d.appendChild(t); st.markers.push(new maplibregl.Marker({ element: d, anchor: 'left', offset: [10, 0] }).setLngLat([c.lon, c.lat]).addTo(map)); }
       });
       syncLabels();
       const target = view.bounds || WORLD;
