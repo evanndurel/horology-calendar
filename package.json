@@ -1,0 +1,20 @@
+{
+  "name": "horology-calendar",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "The international watch fair calendar. Free and open source. An initiative of 289 Consulting.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/sitemap.mjs && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "d3-geo": "^3.1.2"
+  },
+  "devDependencies": {
+    "vite": "^8.3.8"
+  }
+}
