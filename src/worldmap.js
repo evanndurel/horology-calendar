@@ -39,19 +39,23 @@ function mainBox(f) {
   return best;
 }
 
-export async function createWorldMap(el, { onCountry, onCity, onReady }) {
+export async function createWorldMap(el, { onCountry, onCity, onReady, onMove }) {
   const fc = await loadCountries();
   const boxes = {}; fc.features.forEach((f, i) => { f.id = i + 1; const cc = f.properties.cc; if (cc && !boxes[cc]) boxes[cc] = mainBox(f); });
   const map = new maplibregl.Map({
     container: el,
     style: { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': C.sea } }] },
     bounds: WORLD, fitBoundsOptions: { padding: 10 }, renderWorldCopies: false, attributionControl: false,
-    dragRotate: false, pitchWithRotate: false, touchPitch: false, scrollZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false,
+    dragRotate: false, pitchWithRotate: false, touchPitch: false, scrollZoom: true, doubleClickZoom: true, boxZoom: false, keyboard: true,
+    // one finger keeps scrolling the page on phones; two fingers pinch and move the map
+    dragPan: !matchMedia('(pointer: coarse)').matches,
     cooperativeGestures: false, maxZoom: 9, minZoom: 0, fadeDuration: 0,
   });
   map.touchZoomRotate.disableRotation();
   const st = { has: new Set(), country: '', markers: [], pulses: [] };
   await new Promise((r) => map.on('load', r));
+  map.setMinZoom(Math.max(0, map.getZoom() - 0.3));
+  map.scrollZoom.setWheelZoomRate(1 / 300);
   map.addSource('countries', { type: 'geojson', data: fc, promoteId: undefined });
   map.addSource('pins', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   const caseState = (on, has, dim, base) => ['case', ['boolean', ['feature-state', 'on'], false], on, ['boolean', ['feature-state', 'has'], false], ['case', ['boolean', ['feature-state', 'dim'], false], dim, has], base];
@@ -74,6 +78,14 @@ export async function createWorldMap(el, { onCountry, onCity, onReady }) {
     const c = p.length ? p : map.queryRenderedFeatures(e.point, { layers: ['land'] }).filter((f) => st.has.has(f.properties.cc));
     map.getCanvas().style.cursor = c.length ? 'pointer' : '';
   });
+  // labels appear for every city once the visitor zooms in far enough
+  const syncLabels = () => el.classList.toggle('zl', map.getZoom() >= 3.2);
+  map.on('zoom', syncLabels);
+  map.on('movestart', (e) => { if (e.originalEvent) st.key = null; });
+  map.on('move', (e) => { if (onMove) onMove(!!e.originalEvent); });
+  // never let the world slide out of the frame
+  map.on('moveend', (e) => { if (!e.originalEvent) return; const c = map.getCenter(); const lng = Math.max(-130, Math.min(160, c.lng)), lat = Math.max(-45, Math.min(65, c.lat)); if (lng !== c.lng || lat !== c.lat) map.easeTo({ center: [lng, lat], duration: 400 }); });
+  map.on('mouseout', () => { map.getCanvas().style.cursor = ''; });
   new ResizeObserver(() => map.resize()).observe(el);
 
   const api = {
@@ -95,8 +107,9 @@ export async function createWorldMap(el, { onCountry, onCity, onReady }) {
       st.markers.forEach((m) => m.remove()); st.markers = [];
       view.cities.forEach((c) => {
         if (c.live && (!zoomed || c.cc === view.country)) { const d = document.createElement('div'); d.innerHTML = '<span class="glpulse"></span>'; st.markers.push(new maplibregl.Marker({ element: d }).setLngLat([c.lon, c.lat]).addTo(map)); }
-        if (zoomed && c.cc === view.country) { const d = document.createElement('div'); d.className = 'gllabel'; d.textContent = c.city + (c.count > 1 ? ' · ' + c.count : ''); st.markers.push(new maplibregl.Marker({ element: d, anchor: 'left', offset: [10, 0] }).setLngLat([c.lon, c.lat]).addTo(map)); }
+        { const d = document.createElement('div'); d.className = 'gllabel' + (zoomed && c.cc === view.country ? ' on' : '') + (zoomed && c.cc !== view.country ? ' dim' : ''); d.textContent = c.city + (c.count > 1 ? ' · ' + c.count : ''); st.markers.push(new maplibregl.Marker({ element: d, anchor: 'left', offset: [10, 0] }).setLngLat([c.lon, c.lat]).addTo(map)); }
       });
+      syncLabels();
       const target = view.bounds || WORLD;
       const key = JSON.stringify(target);
       if (key !== st.key) {

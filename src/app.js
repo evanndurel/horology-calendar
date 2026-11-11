@@ -331,6 +331,7 @@ function startGL(el) {
   if (GLM.loading) return; GLM.loading = true;
   import('./worldmap.js').then((m) => m.createWorldMap(el, {
     onCountry: (cc) => { M.touched = true; Object.assign(M, { country: cc, city: '', ev: '', all: false }); updateMap(); },
+    onMove: (byUser) => { if (byUser) { const h = document.getElementById('mhint'); if (h) h.remove(); } if (GLM.pos) GLM.pos(); },
     onCity: (c) => { M.touched = true; const lst = upcoming().filter((e) => e.city === c); const small = document.getElementById('mapbox').clientWidth < 560; Object.assign(M, { country: lst[0] ? lst[0].cc : M.country, city: c, ev: lst.length === 1 ? lst[0].id : '', all: small && lst.length > 1 }); updateMap(); if (small) setTimeout(() => document.getElementById('mpanel').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300); },
   })).then((api) => {
     GLM.loading = false;
@@ -367,7 +368,9 @@ function updateMap() {
       bounds = [[a - padX, b2 - padY], [c2 + padX, d2 + padY]];
     }
     document.getElementById('callout').innerHTML = '';
-    GLM.api.update({ hasCountries: new Set(Object.keys(byC)), country: M.country, cities, bounds }, () => { if (document.getElementById('glmap')) renderCallout(byCity, (n) => { const p = GLM.api.project(CITYLL[n][0], CITYLL[n][1]); return { left: p.x / p.w * 100, top: p.y / p.h * 100 }; }); });
+    GLM.api.update({ hasCountries: new Set(Object.keys(byC)), country: M.country, cities, bounds }, () => { if (document.getElementById('glmap')) { const pf = (n) => { const p = GLM.api.project(CITYLL[n][0], CITYLL[n][1]); return { left: p.x / p.w * 100, top: p.y / p.h * 100 }; }; renderCallout(byCity, pf);
+      // keep the city card attached to its point while the visitor zooms or drags the map
+      GLM.pos = () => { const c = document.querySelector('#callout .callout'); if (!c || !M.city || !CITYLL[M.city]) return; const q = pf(M.city); c.style.left = Math.max(14, Math.min(86, q.left)) + '%'; c.style.top = q.top + '%'; c.style.visibility = (q.top < 0 || q.top > 100 || q.left < 0 || q.left > 100) ? 'hidden' : ''; }; } });
   } else {
   const nt = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
   if (zgs[0].style.transform && zgs[0].style.transform !== nt) { const mbx = document.getElementById('mapbox'); mbx.classList.remove('swap'); void mbx.offsetWidth; mbx.classList.add('swap'); }

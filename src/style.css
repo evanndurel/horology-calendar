@@ -380,3 +380,5 @@ button:disabled{cursor:wait}
 .glmap .maplibregl-canvas{outline:none}
 .glpulse{display:block;width:14px;height:14px;border-radius:50%;border:1.5px solid #E4CF9F;pointer-events:none;will-change:transform,opacity;animation:pulse 2.4s ease-out infinite}
 .gllabel{pointer-events:none;color:#fff;font:600 12px var(--sans);letter-spacing:.02em;white-space:nowrap;text-shadow:0 0 3px #0A1322,0 0 6px #0A1322,0 1px 2px #0A1322}
+.gllabel{opacity:0;transition:opacity .3s}.gllabel.on,.glmap.zl .gllabel{opacity:1}.glmap.zl .gllabel.dim{opacity:.45}
+.glmap .maplibregl-canvas{cursor:grab}.glmap .maplibregl-canvas:active{cursor:grabbing}
