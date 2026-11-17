@@ -144,10 +144,10 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:26px
 .prog{position:fixed;top:0;left:0;height:2px;width:0;background:var(--gold2);z-index:60;pointer-events:none}
 .ld{position:fixed;inset:0;z-index:100;background:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .7s ease,visibility .7s}
 .ld.out{opacity:0;visibility:hidden}
-.ld .bar{position:absolute;top:0;left:0;height:3px;width:0;background:var(--navy);animation:bar 2.7s cubic-bezier(.6,0,.2,1) .1s forwards}
+.ld .bar{position:absolute;top:0;left:0;height:3px;width:0;background:var(--navy);animation:bar 1.9s cubic-bezier(.6,0,.2,1) .1s forwards}
 .ld .word{font-family:var(--serif);font-size:clamp(28px,7.5vw,60px);white-space:nowrap;line-height:1}
 .ld .ch{color:#D3D5D9;animation:ink .4s ease forwards}
-.ld .sub{margin-top:16px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);opacity:0;animation:fade .7s ease 1.9s forwards;text-align:center}
+.ld .sub{margin-top:16px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);opacity:0;animation:fade .5s ease 1.2s forwards;text-align:center}
 .ld .ldin{transition:opacity .25s ease,transform .25s ease}.ld .ldin.gone{opacity:0;transform:translateY(-8px)}
 .ld .hello{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .ld .hw{font-family:var(--serif),"Noto Serif","Hiragino Mincho ProN","Songti SC",serif;font-size:clamp(40px,9vw,72px);line-height:1.2;color:var(--ink);animation:hw .14s ease-out}

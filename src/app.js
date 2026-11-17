@@ -855,7 +855,7 @@ async function boot() {
   const intro = !seen && location.pathname === '/';
   const t0 = Date.now(); let l = null;
   if (intro) {
-    const word = 'World Watch Calendar'.split('').map((c, i) => c === ' ' ? '<span>&#160;</span>' : '<span class="ch" style="animation-delay:' + (200 + i * 100) + 'ms">' + c + '</span>').join('');
+    const word = 'World Watch Calendar'.split('').map((c, i) => c === ' ' ? '<span>&#160;</span>' : '<span class="ch" style="animation-delay:' + (150 + i * 60) + 'ms">' + c + '</span>').join('');
     l = document.createElement('div'); l.className = 'ld'; l.setAttribute('role', 'status'); l.setAttribute('aria-label', 'Loading World Watch Calendar');
     l.innerHTML = '<div class="bar"></div><div class="ldin" style="padding:0 16px"><div class="word" aria-hidden="true">' + word + '</div><div class="sub">The international watch fair calendar</div></div>';
     introDone = false; document.documentElement.classList.add('intro'); document.body.appendChild(l);
@@ -880,6 +880,6 @@ async function boot() {
       else { h.innerHTML = '<span class="hw last">Welcome<em>.</em></span>'; setTimeout(close, 650); }
     };
     setTimeout(step, 250);
-  }, Math.max(0, 2900 - (Date.now() - t0)));
+  }, Math.max(0, 2000 - (Date.now() - t0)));
 }
 boot();
