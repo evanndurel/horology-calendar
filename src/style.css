@@ -148,6 +148,11 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:26px
 .ld .word{font-family:var(--serif);font-size:clamp(28px,7.5vw,60px);white-space:nowrap;line-height:1}
 .ld .ch{color:#D3D5D9;animation:ink .4s ease forwards}
 .ld .sub{margin-top:16px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);opacity:0;animation:fade .7s ease 1.9s forwards;text-align:center}
+.ld .ldin{transition:opacity .25s ease,transform .25s ease}.ld .ldin.gone{opacity:0;transform:translateY(-8px)}
+.ld .hello{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.ld .hw{font-family:var(--serif),"Noto Serif","Hiragino Mincho ProN","Songti SC",serif;font-size:clamp(40px,9vw,72px);line-height:1.2;color:var(--ink);animation:hw .14s ease-out}
+.ld .hw.last{font-style:italic;animation:hw .35s ease-out}.ld .hw em{color:var(--gold2);font-style:normal}
+@keyframes hw{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes bar{to{width:100%}}
 @keyframes ink{to{color:var(--ink)}}
 @keyframes fade{to{opacity:1}}

@@ -857,13 +857,29 @@ async function boot() {
   if (intro) {
     const word = 'World Watch Calendar'.split('').map((c, i) => c === ' ' ? '<span>&#160;</span>' : '<span class="ch" style="animation-delay:' + (200 + i * 100) + 'ms">' + c + '</span>').join('');
     l = document.createElement('div'); l.className = 'ld'; l.setAttribute('role', 'status'); l.setAttribute('aria-label', 'Loading World Watch Calendar');
-    l.innerHTML = '<div class="bar"></div><div style="padding:0 16px"><div class="word" aria-hidden="true">' + word + '</div><div class="sub">The international watch fair calendar</div></div>';
+    l.innerHTML = '<div class="bar"></div><div class="ldin" style="padding:0 16px"><div class="word" aria-hidden="true">' + word + '</div><div class="sub">The international watch fair calendar</div></div>';
     introDone = false; document.documentElement.classList.add('intro'); document.body.appendChild(l);
   }
   try { await loadEvents(); } catch (x) { if (l) l.remove(); document.documentElement.classList.remove('intro'); document.getElementById('app').innerHTML = '<div style="padding:120px 24px;text-align:center;font-family:Inter,sans-serif"><h1 style="font-weight:500">World Watch Calendar</h1><p>The calendar could not be loaded. Please refresh the page in a moment.</p></div>'; return; }
   if (location.pathname === '/admin') { try { await admLoad(); } catch (x) {} }
   if (!intro) { firstLoad = false; route(); return; }
   route();
-  setTimeout(() => { l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); }, Math.max(0, 2900 - (Date.now() - t0)));
+  // After the name: a quick "hello" in the languages of the watch world, then the site appears.
+  let closed = false;
+  const close = () => { if (closed) return; closed = true; l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); };
+  l.addEventListener('click', close);
+  setTimeout(() => {
+    if (closed) return;
+    const HI = [['Hello', 'en'], ['Bonjour', 'fr'], ['Hallo', 'de'], ['Ciao', 'it'], ['Hola', 'es'], ['Olá', 'pt'], ['Привет', 'ru'], ['Merhaba', 'tr'], ['مرحبا', 'ar'], ['नमस्ते', 'hi'], ['สวัสดี', 'th'], ['你好', 'zh'], ['こんにちは', 'ja'], ['안녕하세요', 'ko']];
+    const box = l.querySelector('.ldin'); box.classList.add('gone');
+    const h = document.createElement('div'); h.className = 'hello'; h.setAttribute('aria-hidden', 'true'); l.appendChild(h);
+    let i = 0;
+    const step = () => {
+      if (closed) return;
+      if (i < HI.length) { h.innerHTML = '<span class="hw" lang="' + HI[i][1] + '">' + HI[i][0] + '</span>'; i++; setTimeout(step, i === 1 ? 520 : i < 4 ? 260 : 150); }
+      else { h.innerHTML = '<span class="hw last">Welcome<em>.</em></span>'; setTimeout(close, 650); }
+    };
+    setTimeout(step, 250);
+  }, Math.max(0, 2900 - (Date.now() - t0)));
 }
 boot();
