@@ -850,8 +850,8 @@ window.addEventListener('popstate', () => route());
 window.addEventListener('scroll', () => { const h = document.documentElement; const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight); document.getElementById('prog').style.width = (p * 100) + '%'; }, { passive: true });
 setInterval(() => { tickClock(); tickCountdown(); }, 1000);
 async function boot() {
-  // Start the intro straight away (first visit of the home page), while the events load underneath.
-  let seen = false; try { seen = sessionStorage.getItem('hc-intro') === '1'; sessionStorage.setItem('hc-intro', '1'); } catch (x) {}
+  // Start the intro straight away (very first visit of the home page on this browser), while the events load underneath.
+  let seen = false; try { seen = localStorage.getItem('wwc-intro') === '1'; localStorage.setItem('wwc-intro', '1'); } catch (x) {}
   const intro = !seen && location.pathname === '/';
   const t0 = Date.now(); let l = null;
   if (intro) {
