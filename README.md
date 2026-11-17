@@ -1,4 +1,4 @@
-# Horology Calendar
+# World Watch Calendar
 
 The free, open calendar of watch fairs and events worldwide: trade fairs, collector shows, auctions and watch weeks, each linked to its official source.
 
@@ -20,7 +20,7 @@ cp .env.example .env   # fill in your Supabase keys (optional)
 npm run dev
 ```
 
-Without Supabase keys the site runs in **demo mode** from `src/seed.json`; changes are kept in your browser only. Demo admin login: `demo@horologycalendar.test` / `demo`.
+Without Supabase keys the site runs in **demo mode** from `src/seed.json`; changes are kept in your browser only. Demo admin login: `demo@worldwatchcalendar.test` / `demo`.
 
 ## Project structure
 

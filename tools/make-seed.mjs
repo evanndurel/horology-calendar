@@ -20,7 +20,7 @@ const miss = rows.filter((r) => r.lat == null).map((r) => r.city); if (miss.leng
 fs.writeFileSync('src/seed.json', JSON.stringify(rows));
 const q = (v) => v == null ? 'null' : typeof v === 'boolean' ? String(v) : typeof v === 'number' ? String(v) : typeof v === 'object' ? "'" + JSON.stringify(v).replace(/'/g, "''") + "'::jsonb" : "'" + String(v).replace(/'/g, "''") + "'";
 const cols = Object.keys(rows[0]);
-let sql = '-- Horology Calendar: initial listings (' + rows.length + ' events). Run once, after schema.sql.\n';
+let sql = '-- World Watch Calendar: initial listings (' + rows.length + ' events). Run once, after schema.sql.\n';
 sql += 'insert into public.events (' + cols.join(', ') + ') values\n' + rows.map((r) => '(' + cols.map((c) => q(r[c])).join(', ') + ')').join(',\n') + '\non conflict (id) do nothing;\n';
 fs.writeFileSync('supabase/seed.sql', sql);
 console.log(rows.length, 'events,', fs.readdirSync('public/images').length, 'images');

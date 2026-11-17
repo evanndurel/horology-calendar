@@ -1,4 +1,4 @@
-// Data access for Horology Calendar.
+// Data access for World Watch Calendar.
 // With VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, everything goes to the
 // Supabase database. Without them the site runs in "demo mode" from the bundled
 // seed data, and changes are kept in the visitor's own browser only.
@@ -60,9 +60,9 @@ function demoApi() {
     },
     async updateEvent(id, patch) { if (!signed) throw new Error('not allowed'); const s = state(); s.patch[id] = Object.assign(s.patch[id] || {}, patch, { updated_on: today() }); save(s); },
     async subscribe(email) { const s = state(); if (!s.subs.find((x) => x.email === email)) s.subs.push({ email, created_at: new Date().toISOString() }); save(s); },
-    async signIn(email, password) { if (email !== 'demo@horologycalendar.test' || password !== 'demo') throw new Error('Invalid login'); signed = true; try { sessionStorage.setItem('hc-demo-admin', '1'); } catch (x) {} },
+    async signIn(email, password) { if (email !== 'demo@worldwatchcalendar.test' || password !== 'demo') throw new Error('Invalid login'); signed = true; try { sessionStorage.setItem('hc-demo-admin', '1'); } catch (x) {} },
     async signOut() { signed = false; try { sessionStorage.removeItem('hc-demo-admin'); } catch (x) {} },
-    async session() { return signed ? { email: 'demo@horologycalendar.test' } : null; },
+    async session() { return signed ? { email: 'demo@worldwatchcalendar.test' } : null; },
     async isAdmin() { return signed; },
     async contacts() { return state().contacts; },
     async subscribers() { return state().subs; },

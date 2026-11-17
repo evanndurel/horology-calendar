@@ -1,5 +1,5 @@
 -- =====================================================================
--- Horology Calendar — database schema (Supabase / PostgreSQL)
+-- World Watch Calendar — database schema (Supabase / PostgreSQL)
 -- Run this once in Supabase: SQL Editor → New query → paste → Run.
 -- Then run seed.sql the same way to load the initial listings.
 -- =====================================================================
