@@ -631,3 +631,16 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 @keyframes sheetup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .ld .ldin{text-align:center}
 .ld .word{display:inline-block}
+/* compact city card on phones */
+@media (max-width:600px){
+  .callout{max-height:44%!important;left:6px!important;right:6px!important;bottom:6px!important;border-radius:10px}
+  .callout>div:first-child{padding:9px 12px 7px!important}
+  .callout>div:first-child .k{font-size:9px!important}
+  .callout>div:first-child .serif{font-size:18px!important;margin-top:2px!important}
+  .callout [data-act=mclose]{width:28px!important;height:28px!important}
+  .callout>div:nth-child(2){padding:2px 0!important}
+  .cev{padding:7px 12px;gap:10px}
+  .cev span span:first-child{font-size:13px!important}
+  .cev span span:last-child{font-size:11px!important}
+  .callout [data-act=mall]{min-height:36px!important;font-size:10px!important;padding:0 12px!important}
+}

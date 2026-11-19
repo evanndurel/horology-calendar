@@ -118,7 +118,10 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
       });
       syncLabels();
       const target = view.bounds || WORLD;
-      const key = JSON.stringify(target);
+      // on phones the city card covers the bottom of the map, so frame the country in the space above it
+      const phone = el.clientWidth < 560;
+      const pad = zoomed ? (phone ? { top: 50, bottom: view.sheet ? Math.round(el.clientHeight * 0.46) : 30, left: 24, right: 24 } : { top: 60, bottom: 50, left: 40, right: 40 }) : 10;
+      const key = JSON.stringify(target) + (phone && view.sheet ? 's' : '');
       if (key !== st.key) {
         st.key = key;
         map.once('moveend', () => done && done());
@@ -129,7 +132,7 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
           el.classList.add('dive'); setTimeout(() => el.classList.remove('dive'), 2000);
           lightUp(view.cities.length);
           map.fitBounds(target, { padding: 10, duration: 0 });
-        } else { st.flown = true; map.fitBounds(target, { padding: zoomed ? { top: 60, bottom: 50, left: 40, right: 40 } : 10, maxZoom: 7, duration: 1100, essential: true }); }
+        } else { st.flown = true; map.fitBounds(target, { padding: pad, maxZoom: 7, duration: 1100, essential: true }); }
       } else if (done) done();
     },
     destroy() { map.remove(); },
