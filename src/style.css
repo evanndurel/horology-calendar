@@ -530,3 +530,10 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 #app.home .field{background:#fff}
 #app.home .mtabs-wrap{background:#F4EFE6}
 
+/* intro: the full stop of "Welcome." becomes the page */
+.burst{position:fixed;z-index:101;width:0;height:0;pointer-events:none;transition:opacity .6s ease}
+.burst.fade{opacity:0}
+.bgold,.bnavy{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;will-change:transform}
+.bgold{background:#B8975A}.bnavy{background:#0F1B2D;transform:scale(0)}
+.ld .hw.away{transition:opacity .35s ease,transform .5s ease,filter .4s ease;opacity:0;transform:scale(.94);filter:blur(2px)}
+.ld .hw.away em{opacity:0}

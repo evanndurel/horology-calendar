@@ -899,6 +899,27 @@ async function boot() {
   // After the name: a quick "hello" in the languages of the watch world, then the site appears.
   let closed = false;
   const close = () => { if (closed) return; closed = true; l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); };
+  // The gold full stop of "Welcome." grows into a navy circle that fills the screen, then the site appears underneath.
+  const burst = () => {
+    if (closed) return;
+    const dot = l.querySelector('.hw.last em'); if (!dot) { close(); return; }
+    const r = dot.getBoundingClientRect(); const cx = r.left + r.width / 2, cy = r.bottom - r.height * 0.28;
+    const far = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy));
+    // two discs: a gold one leads, the navy one follows just behind, so a thin gold wave runs to the edges
+    const b = document.createElement('div'); b.className = 'burst'; b.style.left = cx + 'px'; b.style.top = cy + 'px';
+    const g = document.createElement('div'); g.className = 'bgold'; b.appendChild(g);
+    const n = document.createElement('div'); n.className = 'bnavy'; b.appendChild(n);
+    document.body.appendChild(b); l.querySelector('.hw.last').classList.add('away');
+    const S = far / 6 + 4, E = 'cubic-bezier(.7,0,.2,1)';
+    if (g.animate) {
+      g.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.8)', offset: 0.15 }, { transform: 'scale(' + S + ')' }], { duration: 820, easing: E, fill: 'forwards' });
+      n.animate([{ transform: 'scale(0)' }, { transform: 'scale(0)', offset: 0.18 }, { transform: 'scale(' + S + ')' }], { duration: 860, easing: E, fill: 'forwards' });
+    } else { g.style.transform = n.style.transform = 'scale(' + S + ')'; }
+    setTimeout(() => {
+      closed = true; l.remove(); document.documentElement.classList.remove('intro'); introDone = true;
+      b.classList.add('fade'); setTimeout(() => b.remove(), 700);
+    }, 880);
+  };
   l.addEventListener('click', close);
   setTimeout(() => {
     if (closed) return;
@@ -909,7 +930,7 @@ async function boot() {
     const step = () => {
       if (closed) return;
       if (i < HI.length) { h.innerHTML = '<span class="hw" lang="' + HI[i][1] + '">' + HI[i][0] + '</span>'; i++; setTimeout(step, i === 1 ? 520 : i < 4 ? 260 : 150); }
-      else { h.innerHTML = '<span class="hw last">Welcome<em>.</em></span>'; setTimeout(close, 650); }
+      else { h.innerHTML = '<span class="hw last">Welcome<em>.</em></span>'; setTimeout(burst, 750); }
     };
     setTimeout(step, 250);
   }, Math.max(0, 2000 - (Date.now() - t0)));
