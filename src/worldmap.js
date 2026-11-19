@@ -47,8 +47,7 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
     style: { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': C.sea } }] },
     bounds: WORLD, fitBoundsOptions: { padding: 10 }, renderWorldCopies: false, attributionControl: false,
     dragRotate: false, pitchWithRotate: false, touchPitch: false, scrollZoom: true, doubleClickZoom: true, boxZoom: false, keyboard: true,
-    // one finger keeps scrolling the page on phones; two fingers pinch and move the map
-    dragPan: !matchMedia('(pointer: coarse)').matches,
+    dragPan: true,
     cooperativeGestures: false, maxZoom: 9, minZoom: 0, fadeDuration: 0,
   });
   map.touchZoomRotate.disableRotation();
@@ -110,7 +109,7 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
       const rank = new Map(view.cities.slice().sort((p, q) => p.lon - q.lon).map((c, i) => [c, i]));
       map.getSource('pins').setData({ type: 'FeatureCollection', features: view.cities.map((c) => ({
         type: 'Feature', geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
-        properties: { i: rank.get(c), city: c.city, r: (3 + Math.min(c.count, 7) * 0.6) * (zoomed ? 1.6 : 1) * (c.act ? 1.25 : 1), dim: zoomed && c.cc !== view.country, act: !!c.act } })) });
+        properties: { i: rank.get(c), city: c.city, r: (el.clientWidth < 560 ? 0.62 : 1) * (3 + Math.min(c.count, 7) * 0.6) * (zoomed ? 1.6 : 1) * (c.act ? 1.25 : 1), dim: zoomed && c.cc !== view.country, act: !!c.act } })) });
       // pulsing rings for events happening now, and city labels when zoomed (HTML, animated by the GPU)
       st.markers.forEach((m) => m.remove()); st.markers = [];
       view.cities.forEach((c) => {

@@ -354,7 +354,7 @@ function startGL(el) {
   import('./worldmap.js').then((m) => m.createWorldMap(el, {
     onCountry: (cc) => { M.touched = true; Object.assign(M, { country: cc, city: '', ev: '', all: false }); updateMap(); },
     onMove: (byUser) => { if (byUser) { const h = document.getElementById('mhint'); if (h) h.remove(); } if (GLM.pos) GLM.pos(); },
-    onCity: (c) => { M.touched = true; const lst = upcoming().filter((e) => e.city === c); const small = document.getElementById('mapbox').clientWidth < 560; Object.assign(M, { country: lst[0] ? lst[0].cc : M.country, city: c, ev: lst.length === 1 ? lst[0].id : '', all: small && lst.length > 1 }); updateMap(); if (small) setTimeout(() => document.getElementById('mpanel').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300); },
+    onCity: (c) => { M.touched = true; const lst = upcoming().filter((e) => e.city === c); const small = document.getElementById('mapbox').clientWidth < 560; Object.assign(M, { country: lst[0] ? lst[0].cc : M.country, city: c, ev: small ? '' : (lst.length === 1 ? lst[0].id : ''), all: false }); updateMap(); },
   })).then((api) => {
     GLM.loading = false;
     if (!document.body.contains(el)) { api.destroy(); return; }
