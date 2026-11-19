@@ -788,6 +788,7 @@ function route() {
   const p = location.pathname.replace(/\/+$/, '') || '/';
   const app = document.getElementById('app');
   const H = 'World Watch Calendar';
+  app.classList.toggle('home', p === '/');
   if (GLM.api && p !== '/map') { GLM.api.destroy(); GLM.api = null; }
   if (p.startsWith('/event/')) { const id = decodeURIComponent(p.slice(7)); const e = byId[id]; app.innerHTML = pageEvent(id); setMeta((e ? e.n + ' · ' : 'Event not found · ') + H, e ? e.n + ': ' + range(e.s, e.e) + ', ' + place(e) + '. ' + (e.desc || 'Dates, venue and official website.') : ''); if (e) eventJsonLd(e); tickCountdown(); }
   else if (p === '/agenda') { app.innerHTML = pageAgenda(); renderAgenda(); setMeta('Agenda · ' + H, 'Month-by-month agenda of watch fairs, collector shows, auctions and watch weeks worldwide.'); }

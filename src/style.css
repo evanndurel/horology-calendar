@@ -506,7 +506,7 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 .tfull{display:inline-flex;align-items:center;min-height:46px;padding:0 6px;font-size:13px;letter-spacing:.06em;color:var(--muted);text-decoration:none}.tfull:hover{color:var(--ink)}
 .tinl{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--ink);text-decoration:none}
 /* stronger home sections */
-.gband{background:#EFE9DD;padding:104px 0 96px;scroll-margin-top:0}
+.gband{padding:104px 0 96px;scroll-margin-top:0}
 .gband .eyebrow{color:#6B5A3A}.gband .eyebrow::before{background:#B8975A}
 .gband .way{border:0;box-shadow:0 1px 0 rgba(15,27,45,.04),0 24px 48px -30px rgba(15,27,45,.45)}
 .gband .way:hover{box-shadow:0 0 0 1px var(--gold2),0 30px 56px -28px rgba(15,27,45,.5)}
@@ -521,3 +521,12 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 .hl .card>div:last-child{border-top-color:var(--line-d)!important}
 .hl .card .arr{color:var(--gold)}
 .hl .card:hover{border-color:var(--gold2);transform:translateY(-4px)}
+
+/* home: one warm ivory tone for every light section, so the page alternates navy / ivory consistently */
+#app.home{background:#F4EFE6}
+#app.home .ft{background:#fff}
+#app.home section:not(.dark) em.g{color:#8A6A2E}
+#app.home .extras{background:#fff}
+#app.home .field{background:#fff}
+#app.home .mtabs-wrap{background:#F4EFE6}
+
