@@ -2,6 +2,7 @@ document.documentElement.classList.add('js');
 import { api, DEMO } from './api.js';
 import MAP from './map.json';
 import { geoNaturalEarth1 } from 'd3-geo';
+import { homeGuide, personaTip, personaWay, pageGuideBody } from './guide.js';
 
 const D = { map: { base: Object.values(MAP.c).join(''), hi: MAP.c }, box: MAP.box };
 const BASE_PATHS = Object.values(MAP.c).map((d) => '<path d="' + d + '"/>').join('');
@@ -93,17 +94,18 @@ function header(active) {
   return '<header class="hd"><div class="wrap-l hdi"><a href="/" class="logo">World Watch Calendar</a><div class="hdr">'
     + '<button class="sbtn" data-act="search" aria-label="Search events (shortcut /)" title="Search (/)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>'
     + '<button class="menu" data-act="menu" aria-label="Open menu" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'
-    + '<nav class="nav" id="nav" aria-label="Main"><span class="clock" id="clock">Geneva --:--</span>' + l('/', 'Calendar', 'home') + l('/agenda', 'Agenda', 'agenda') + l('/map', 'Map', 'map') + l('/about', 'About', 'about')
+    + '<nav class="nav" id="nav" aria-label="Main"><span class="clock" id="clock">Geneva --:--</span>' + l('/', 'Calendar', 'home') + l('/agenda', 'Agenda', 'agenda') + l('/map', 'Map', 'map') + l('/guide', 'Guide', 'guide') + l('/about', 'About', 'about')
     + '<a href="/add" class="pill' + (active === 'add' ? ' on' : '') + '">Add your event</a></nav></div></div></header>';
 }
 function footer(with289) {
   return '<footer class="ft"><div class="wrap ftg reveal"><div style="flex:1 1 280px;max-width:360px"><div class="serif" style="font-size:26px">World Watch Calendar</div><p style="margin:14px 0 0;font-size:14px;line-height:1.65;color:var(--muted)">The free, open calendar of watch fairs and events worldwide.</p></div>'
-    + '<nav aria-label="Explore"><span class="k" style="font-size:11px">Explore</span><a class="ul" href="/">Calendar</a><a class="ul" href="/agenda">Agenda</a><a class="ul" href="/map">World map</a><a class="ul" href="/add">Add your event</a></nav>'
+    + '<nav aria-label="Explore"><span class="k" style="font-size:11px">Explore</span><a class="ul" href="/">Calendar</a><a class="ul" href="/agenda">Agenda</a><a class="ul" href="/map">World map</a><a class="ul" href="/guide">How it works</a><a class="ul" href="/add">Add your event</a></nav>'
     + '<nav aria-label="Information"><span class="k" style="font-size:11px">Information</span><a class="ul" href="/about">About</a><a class="ul" href="/legal">Legal &amp; privacy</a><a class="ul" href="' + (import.meta.env.VITE_REPO_URL || '/about') + '"' + (import.meta.env.VITE_REPO_URL ? ' target="_blank" rel="noopener"' : '') + '>Open source</a></nav></div>'
     + '<div class="wrap ftb"><span>© ' + new Date().getFullYear() + ' World Watch Calendar · Open source · <a href="/admin" style="color:inherit;text-decoration:none;opacity:.6">Admin</a></span>' + (with289 ? '<span style="font-size:12px">An initiative of 289 Consulting</span>' : '') + '</div></footer>';
 }
 
 /* ---------------- HOME ---------------- */
+let WHO = 'lover'; try { WHO = localStorage.getItem('wwc-who') || 'lover'; } catch (x) {}
 const F = { q: '', country: '', month: '', size: '', type: 'all', open: false, free: false, mine: false, autoMonth: true };
 function miniMap() {
   const up = mapEvents(); const cnt = {}, lv = {};
@@ -135,6 +137,7 @@ function pageHome() {
     + '<div class="stat reveal" style="--d:130ms"><div class="n" data-count="' + countries + '">' + countries + '</div><div class="l">Countries</div></div>'
     + '<div class="stat reveal" style="--d:260ms"><div class="n"><span data-count="100">100</span>%</div><div class="l">Linked to official sources</div></div>'
     + '<div class="stat reveal" style="--d:390ms"><div class="n">Free</div><div class="l">For visitors &amp; organisers</div></div></div></div></section>'
+    + homeGuide(WHO)
     + '<section class="dark" style="border-top:1px solid var(--line-d)"><div class="wrap" style="padding-top:96px;padding-bottom:104px"><div class="eyebrow reveal">Explore by country</div>'
     + '<div class="reveal" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px"><h2 class="sec">Where the watch world <em class="g">meets.</em></h2><a href="/map" class="ul" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)">Open the world map</a></div>'
     + '<a href="/map" class="mapcard reveal z" style="margin-top:44px" aria-label="Open the interactive world map">' + miniMap() + '<span class="btn btn-gold cta" style="min-height:42px;padding:0 18px;font-size:12px;letter-spacing:.14em;text-transform:uppercase">Explore the map ' + ARR + '</span></a></div></section>'
@@ -767,6 +770,7 @@ function route() {
   else if (p === '/agenda') { app.innerHTML = pageAgenda(); renderAgenda(); setMeta('Agenda · ' + H, 'Month-by-month agenda of watch fairs, collector shows, auctions and watch weeks worldwide.'); }
   else if (p === '/map') { if (GLM.api) { GLM.api.destroy(); GLM.api = null; } app.innerHTML = pageMap(); updateMap(); setMeta('World map · ' + H, 'Explore watch fairs and events around the world on an interactive map.'); }
   else if (p === '/add') { app.innerHTML = pageAdd(); window.__addT = Date.now(); setMeta('Add your event · ' + H, 'Organisers: list your watch fair or event for free in a few minutes.'); }
+  else if (p === '/guide') { app.innerHTML = pageGuideBody(header, footer); setMeta('How it works · ' + H, 'A two-minute guide to World Watch Calendar: the world map, the calendar, the agenda, event pages and adding your own event.'); }
   else if (p === '/about') { app.innerHTML = pageAbout(); setMeta('About · ' + H, 'A free, open calendar for the watch world. An initiative of 289 Consulting.'); }
   else if (p === '/legal') { app.innerHTML = pageLegal(); setMeta('Legal & privacy · ' + H, 'Legal notice, terms of publication and privacy policy of World Watch Calendar.'); }
   else if (p === '/admin') { if (!AUTH.checked) { AUTH.checked = true; admLoad().then(() => { if (AUTH.ok) route(); }); } app.innerHTML = pageAdmin(); renderAdmRows(); setMeta('Admin · ' + H); }
@@ -806,6 +810,14 @@ document.addEventListener('click', (ev) => {
   if (a === 'sclose') { closeSearch(); return; }
   if (a === 'sgo') { goSearch(t.dataset.k, t.dataset.v); return; }
   if (a === 'menu') { const n = document.getElementById('nav'); const o = n.classList.toggle('open'); t.setAttribute('aria-expanded', o); return; }
+  if (a === 'persona') {
+    WHO = v; try { localStorage.setItem('wwc-who', v); } catch (x) {}
+    document.querySelectorAll('[data-act=persona]').forEach((b) => { const on = b.dataset.v === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    const tip = document.getElementById('whotip'); if (tip) { tip.classList.remove('swap'); void tip.offsetWidth; tip.innerHTML = personaTip(v); tip.classList.add('swap'); }
+    const w = personaWay(v); document.querySelectorAll('.way').forEach((c) => { const on = c.dataset.w === w; c.classList.toggle('rec', on); c.querySelector('.wrec').setAttribute('aria-hidden', !on); });
+    return;
+  }
+  if (a === 'gjump') { ev.preventDefault(); const c = document.getElementById(v); if (c) { c.scrollIntoView({ behavior: 'smooth' }); history.replaceState({}, '', '#' + v); } return; }
   if (a === 'scroll') { ev.preventDefault(); const c = document.getElementById('calendar'); if (c) c.scrollIntoView({ behavior: 'smooth' }); return; }
   if (a === 'type') { F.type = v; F.autoMonth = true; renderList(); return; }
   if (a === 'mtab') { F.month = v; F.autoMonth = false; renderList(); if (t.dataset.top) { const w = document.querySelector('.mtabs-wrap'); if (w) window.scrollTo({ top: w.getBoundingClientRect().top + window.scrollY - 8, behavior: 'smooth' }); } return; }

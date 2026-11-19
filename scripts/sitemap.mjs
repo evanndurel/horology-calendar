@@ -13,7 +13,7 @@ if (env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY) {
 }
 if (!events.length) events = JSON.parse(fs.readFileSync('src/seed.json', 'utf8'));
 const today = new Date().toISOString().slice(0, 10);
-const urls = ['/', '/agenda', '/map', '/add', '/about', '/legal'].map((p) => ({ loc: site + p }))
+const urls = ['/', '/agenda', '/map', '/guide', '/add', '/about', '/legal'].map((p) => ({ loc: site + p }))
   .concat(events.filter((e) => e.end_date >= today).map((e) => ({ loc: site + '/event/' + e.id, lastmod: e.updated_on })));
 fs.writeFileSync('public/sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
   + urls.map((u) => '  <url><loc>' + u.loc + '</loc>' + (u.lastmod ? '<lastmod>' + u.lastmod + '</lastmod>' : '') + '</url>').join('\n') + '\n</urlset>\n');
