@@ -537,3 +537,46 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 .bgold{background:#B8975A}.bnavy{background:#0F1B2D;transform:scale(0)}
 .ld .hw.away{transition:opacity .35s ease,transform .5s ease,filter .4s ease;opacity:0;transform:scale(.94);filter:blur(2px)}
 .ld .hw.away em{opacity:0}
+/* ---------- little luxuries ---------- */
+/* page transitions: a fine gold line sweeps across, the new page glides in */
+.sweep{position:fixed;top:0;bottom:0;left:0;width:2px;z-index:90;pointer-events:none;background:linear-gradient(180deg,transparent,#E4CF9F 20%,#B8975A 50%,#E4CF9F 80%,transparent);box-shadow:0 0 18px 2px rgba(228,207,159,.55);animation:sweep .8s cubic-bezier(.6,0,.2,1) forwards}
+@keyframes sweep{0%{transform:translateX(-4px);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translateX(100vw);opacity:0}}
+#app.pgin>*{animation:pgin .6s cubic-bezier(.2,.7,.2,1) both}
+#app.pgin>*:nth-child(2){animation-delay:.06s}#app.pgin>*:nth-child(n+3){animation-delay:.12s}
+@keyframes pgin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* rolling digits */
+.rl{display:inline-block;height:1em;overflow:hidden;vertical-align:top;line-height:1}
+.rli{display:flex;flex-direction:column;transform:translateY(calc(var(--n) * -1em));transition:transform .55s cubic-bezier(.45,1.45,.45,1)}
+.rli.slow{transition:transform 1.9s cubic-bezier(.2,.9,.25,1)}
+.rli>span{display:block;height:1em;line-height:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* hero countdown to the next big fair */
+.hcd{margin-top:22px;display:inline-flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 18px 12px 20px;border:1px solid rgba(228,207,159,.35);border-radius:12px;background:rgba(228,207,159,.05);text-decoration:none;color:#fff;transition:border-color .25s,background .25s}
+.hcd:hover{border-color:var(--gold2);background:rgba(228,207,159,.09)}
+.hcdl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-d)}
+.hcdr{display:inline-flex;align-items:flex-end;gap:6px}
+.hcu{display:inline-flex;flex-direction:column;align-items:center}
+.hcu b{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums}
+.hcu i{margin-top:4px;font-style:normal;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-d2)}
+.hcs{font-family:var(--serif);font-size:24px;line-height:1;color:var(--gold2);padding-bottom:16px;opacity:.6}
+/* live seconds hand on the hero watch */
+.wsec{transform-box:view-box;transform-origin:200px 250px;animation:wsec 60s linear infinite}
+@keyframes wsec{to{transform:rotate(360deg)}}
+/* gold reflection under the pointer */
+.hl .card::before,.way::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .35s;border-radius:inherit}
+.hl .card::before{background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(228,207,159,.22),transparent 55%)}
+.way::before{background:radial-gradient(380px circle at var(--mx,50%) var(--my,50%),rgba(212,183,126,.16),transparent 55%)}
+.hl .card:hover::before,.way:hover::before{opacity:1}
+.hl .card>*,.way>*{position:relative;z-index:2}
+/* map: glide-in, cities light up */
+.glmap.lighting .glpulse{opacity:0}
+.glpulse{transition:opacity .6s ease 1.6s}
+/* event page: big gold date + parallax cover */
+.evdate{margin:26px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 20px}
+.evd{font-family:var(--serif);font-size:clamp(52px,8vw,96px);line-height:.95;color:var(--gold)}
+.evm{display:flex;flex-direction:column;gap:6px;font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold3)}
+.evm em{font-style:normal;letter-spacing:.04em;text-transform:none;font-size:16px;color:var(--muted-d)}
+.pwin{overflow:hidden;border-radius:6px;box-shadow:0 24px 60px rgba(15,27,45,.25)}
+.pwin img{display:block;border-radius:0!important;box-shadow:none!important;transform:scale(1.14);will-change:transform}
+.glmap.dive canvas{animation:dive 1.9s cubic-bezier(.16,.84,.3,1) both;transform-origin:52% 46%}
+@keyframes dive{from{transform:scale(.42);opacity:0;filter:blur(3px)}35%{opacity:1}to{transform:none;opacity:1;filter:none}}

@@ -93,6 +93,13 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
     project(lon, lat) { const p = map.project([lon, lat]); return { x: p.x, y: p.y, w: el.clientWidth, h: el.clientHeight }; },
     // view: { hasCountries:Set, country, cities:[{city, cc, lon, lat, count, live, act}], bounds }
     update(view, done) {
+      const lightUp = (n) => {
+        const base = ['case', ['get', 'dim'], 0.2, 1]; const t0 = performance.now(), dur = 1700;
+        const set = (k) => { map.setPaintProperty('pins', 'circle-opacity', ['case', ['<', ['get', 'i'], k], base, 0]); map.setPaintProperty('pins', 'circle-stroke-opacity', ['case', ['<', ['get', 'i'], k], base, 0]); };
+        set(0); el.classList.add('lighting');
+        const step = (now) => { const p = Math.min(1, (now - t0 - 500) / dur); const k = Math.max(0, Math.ceil(p * n)); set(k); if (p < 1) requestAnimationFrame(step); else { map.setPaintProperty('pins', 'circle-opacity', base); map.setPaintProperty('pins', 'circle-stroke-opacity', base); el.classList.remove('lighting'); } };
+        requestAnimationFrame(step);
+      };
       st.has = view.hasCountries;
       fc.features.forEach((f) => {
         const cc = f.properties.cc;
@@ -100,9 +107,10 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
       });
       const zoomed = !!view.country;
       const z = zoomed ? map.getZoom() : 0;
+      const rank = new Map(view.cities.slice().sort((p, q) => p.lon - q.lon).map((c, i) => [c, i]));
       map.getSource('pins').setData({ type: 'FeatureCollection', features: view.cities.map((c) => ({
         type: 'Feature', geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
-        properties: { city: c.city, r: (3 + Math.min(c.count, 7) * 0.6) * (zoomed ? 1.6 : 1) * (c.act ? 1.25 : 1), dim: zoomed && c.cc !== view.country, act: !!c.act } })) });
+        properties: { i: rank.get(c), city: c.city, r: (3 + Math.min(c.count, 7) * 0.6) * (zoomed ? 1.6 : 1) * (c.act ? 1.25 : 1), dim: zoomed && c.cc !== view.country, act: !!c.act } })) });
       // pulsing rings for events happening now, and city labels when zoomed (HTML, animated by the GPU)
       st.markers.forEach((m) => m.remove()); st.markers = [];
       view.cities.forEach((c) => {
@@ -115,7 +123,14 @@ export async function createWorldMap(el, { onCountry, onCity, onReady, onMove })
       if (key !== st.key) {
         st.key = key;
         map.once('moveend', () => done && done());
-        map.fitBounds(target, { padding: zoomed ? { top: 60, bottom: 50, left: 40, right: 40 } : 10, maxZoom: 7, duration: 1100, essential: true });
+        const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!st.flown && !zoomed && !calm) {
+          // first arrival: start high above the world, glide down, then light the cities up one by one
+          st.flown = true;
+          el.classList.add('dive'); setTimeout(() => el.classList.remove('dive'), 2000);
+          lightUp(view.cities.length);
+          map.fitBounds(target, { padding: 10, duration: 0 });
+        } else { st.flown = true; map.fitBounds(target, { padding: zoomed ? { top: 60, bottom: 50, left: 40, right: 40 } : 10, maxZoom: 7, duration: 1100, essential: true }); }
       } else if (done) done();
     },
     destroy() { map.remove(); },

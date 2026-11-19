@@ -120,7 +120,7 @@ function miniMap() {
   return '<svg viewBox="150 50 720 250" style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true"><path d="' + D.map.base + '" fill="#152338" stroke="#26364E" stroke-width="0.6" vector-effect="non-scaling-stroke"/>' + hi + pins + '</svg>' + (pulses ? '<svg viewBox="150 50 720 250" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" aria-hidden="true">' + pulses + '</svg>' : '');
 }
 function pageHome() {
-  const up = upcoming(); const next = up[0];
+  const up = upcoming(); const next = up[0]; const cdE = heroCD();
   const countries = new Set(up.map((e) => e.country)).size;
   const hl = ['watches-and-wonders-geneva-2027-2027-04', 'time-on-show-paris-2027-2027-02', 'inhorgenta-munich-2027-2027-02'].map((id) => byId[id]).filter(Boolean);
   const months = [...new Set(up.map((e) => e.s.slice(0, 7)))];
@@ -131,6 +131,7 @@ function pageHome() {
     + '<p class="lead in d2">Trade fairs, collector shows, auctions and watch weeks around the world, each linked to its official source. Free and open to everyone.</p>'
     + '<div class="in d3" style="margin-top:40px;display:flex;flex-wrap:wrap;gap:14px"><a href="/#calendar" class="btn btn-gold" data-act="scroll">Browse the calendar ' + ARR + '</a><a href="/add" class="btn btn-ghost">Add your event</a></div>'
     + (next ? '<div class="in d4"><a class="nextup" href="/event/' + next.id + '"><span class="dot"></span><span>Next up · <b>' + esc(next.n) + '</b> · ' + whenOf(next).replace('Starts in', 'in').toLowerCase() + '</span></a></div>' : '')
+    + (cdE ? '<a class="hcd in d4" href="/event/' + cdE.id + '"><span class="hcdl">' + esc(cdE.n) + ' opens in</span><span class="hcdr" id="hcd" data-start="' + cdE.s + '">' + [['d', 'days'], ['h', 'hrs'], ['m', 'min'], ['s', 'sec']].map(([k, l]) => '<span class="hcu"><b data-u="' + k + '"></b><i>' + l + '</i></span>').join('<span class="hcs">:</span>') + '</span></a>' : '')
     + '</div><div class="dial in d2 big">' + heroArt() + '</div></div>'
     + '<div class="stats"><div class="wrap statsg">'
     + '<div class="stat reveal" style="--d:0ms"><div class="n" data-count="' + up.length + '">' + up.length + '</div><div class="l">Upcoming events</div></div>'
@@ -212,11 +213,11 @@ function pageEvent(id) {
     + '<a href="/" class="in" style="display:inline-flex;align-items:center;gap:10px;min-height:44px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-d);text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Back to calendar</a>'
     + '<div class="eyebrow in d1" style="margin-top:40px">' + esc(e.tl) + ' · ' + esc(e.city) + ' · ' + esc(e.country) + '</div>'
     + '<h1 class="big in d2" style="max-width:920px">' + esc(e.n) + '</h1>'
-    + '<p class="in d3" style="margin:22px 0 0;font-size:19px;color:var(--muted-d)">' + range(e.s, e.e) + (e.venue ? ' · ' + esc(e.venue) : '') + '</p>'
+    + (() => { const x = dm(e.s, e.e); return '<p class="evdate in d3"><span class="evd">' + x.days + '</span><span class="evm">' + ML[+e.s.slice(5, 7) - 1] + ' ' + e.s.slice(0, 4) + (e.venue ? '<em>' + esc(e.venue) + '</em>' : '') + '</span></p>'; })()
     + (e.tbc ? '<p class="in d3 tag" style="margin:12px 0 0;color:#E8A15C">Dates to be confirmed</p>' : '')
     + '<div class="in d3" style="margin-top:18px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;font-size:13px;color:var(--muted-d2)">' + (e.ver ? '<span style="display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:0 12px;border-radius:999px;background:rgba(201,168,106,.14);border:1px solid var(--gold2);color:var(--gold)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Verified listing</span><span>Checked with the organiser.</span>' : '<span style="display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:0 12px;border-radius:999px;border:1px dashed #4A5A72;color:var(--muted-d)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></svg>Not yet verified by the organiser</span><span>Listed from official sources. <a href="/add" class="ul" style="color:var(--gold)">Are you the organiser? Verify this listing</a></span>') + (e.upd ? '<span>Last updated ' + range(e.upd, e.upd) + '</span>' : '') + '</div>'
     + '<div class="in d4" style="margin-top:52px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:32px"><div class="cd" id="cd" data-start="' + e.s + '" role="timer" aria-label="Time until the event opens"></div><div style="display:inline-flex;align-items:center;gap:10px;padding-bottom:6px;font-size:13px;color:var(--muted-d)"><span class="dot"></span>' + whenOf(e) + '</div></div></div></section>'
-    + (e.img ? '<div class="wrap cover-wrap"><figure class="cover reveal z"><img data-act="zoom" data-cover="1" data-id="' + e.id + '" data-i="0" style="cursor:zoom-in" src="' + e.img + '" alt="' + esc(e.alt || e.n) + '" loading="lazy"><figcaption>Photo ' + esc(e.credit || '') + '</figcaption></figure>' + (e.gal && e.gal.length ? '<div class="gal">' + e.gal.map((g, i) => '<button class="galb reveal" style="--d:' + i * 120 + 'ms" data-act="zoom" data-id="' + e.id + '" data-i="' + i + '" aria-label="Enlarge photo: ' + esc(g.alt) + '"><img src="' + g.src + '" alt="' + esc(g.alt) + '" loading="lazy"></button>').join('') + '</div>' : '') + '</div>' : '')
+    + (e.img ? '<div class="wrap cover-wrap"><figure class="cover reveal z"><div class="pwin"><img data-act="zoom" data-cover="1" data-id="' + e.id + '" data-i="0" style="cursor:zoom-in" src="' + e.img + '" alt="' + esc(e.alt || e.n) + '" loading="lazy"></div><figcaption>Photo ' + esc(e.credit || '') + '</figcaption></figure>' + (e.gal && e.gal.length ? '<div class="gal">' + e.gal.map((g, i) => '<button class="galb reveal" style="--d:' + i * 120 + 'ms" data-act="zoom" data-id="' + e.id + '" data-i="' + i + '" aria-label="Enlarge photo: ' + esc(g.alt) + '"><img src="' + g.src + '" alt="' + esc(g.alt) + '" loading="lazy"></button>').join('') + '</div>' : '') + '</div>' : '')
     + '<main class="wrap" style="padding-top:' + (e.img ? 72 : 96) + 'px;padding-bottom:40px"><div style="display:flex;flex-wrap:wrap;gap:64px;align-items:flex-start">'
     + '<div class="reveal l" style="flex:999 1 520px;min-width:0"><div class="eyebrow">About the event</div><p class="serif" style="margin:26px 0 0;font-size:30px;line-height:1.35">' + esc(desc) + '</p>'
     + '<div style="margin-top:44px;padding:24px 28px;background:var(--surface);border-radius:4px;font-size:14px;line-height:1.65;color:var(--muted)">This listing is published from the organiser’s official information. The organiser is responsible for its content. Always confirm dates and access conditions on the official website. <a href="/add" class="ul">Report an error</a></div>'
@@ -235,6 +236,27 @@ function pageEvent(id) {
     + (more.length ? '<section class="reveal" style="margin-top:120px"><div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px"><h2 class="sec" style="margin:0;font-size:44px">You may also like</h2><a href="/" class="ul k">All events</a></div><div style="margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">'
       + more.map((x, i) => '<a href="/event/' + x.id + '" class="card reveal" style="--d:' + i * 120 + 'ms;min-height:0;padding:28px;gap:10px"><div class="k" style="font-size:11px">' + range(x.s, x.e) + ' · ' + esc(x.city) + '</div><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span style="font-size:18px;font-weight:600">' + esc(x.n) + '</span>' + ARR + '</div></a>').join('') + '</div></section>' : '')
     + '</main><div style="height:80px"></div>' + footer(false);
+}
+/* rolling digits, like the reels of a chronograph totaliser */
+function reels(str, n0) { return String(str).split('').map((c) => /\d/.test(c) ? '<span class="rl" aria-hidden="true"><span class="rli" style="--n:' + (n0 == null ? c : n0) + '" data-v="' + c + '">' + '0123456789'.split('').map((x) => '<span>' + x + '</span>').join('') + '</span></span>' : '<span aria-hidden="true">' + c + '</span>').join('') + '<span class="sr">' + str + '</span>'; }
+function setReels(el, str) {
+  const r = el.querySelectorAll('.rli');
+  if (r.length !== String(str).replace(/\D/g, '').length) { el.innerHTML = reels(str); return; }
+  let k = 0; String(str).split('').forEach((c) => { if (/\d/.test(c)) { const x = r[k++]; if (x.dataset.v !== c) { x.dataset.v = c; x.style.setProperty('--n', c); } } });
+  const sr = el.querySelector('.sr'); if (sr) sr.textContent = str;
+}
+function heroCD() {
+  const now = Date.now();
+  const soon = (l) => l.filter((e) => e && T(e.s) + 7 * 3600e3 > now).sort((a, b) => T(a.s) - T(b.s))[0];
+  // the flagship fair first; otherwise the next major trade fair
+  return soon([byId['watches-and-wonders-geneva-2027-2027-04']]) || soon(upcoming().filter((e) => e.t === 'trade')) || null;
+}
+function tickHeroCD() {
+  const el = document.getElementById('hcd'); if (!el) return;
+  let t = Math.max(0, Math.floor((T(el.dataset.start) + 7 * 3600e3 - Date.now()) / 1000));
+  const pad = (x) => (x < 10 ? '0' : '') + x;
+  const d = Math.floor(t / 86400); t -= d * 86400; const h = Math.floor(t / 3600); t -= h * 3600; const m = Math.floor(t / 60); const sec = t - m * 60;
+  [['d', String(d)], ['h', pad(h)], ['m', pad(m)], ['s', pad(sec)]].forEach(([k, v]) => { const b = el.querySelector('[data-u=' + k + ']'); if (b) setReels(b, v); });
 }
 function tickCountdown() {
   const el = document.getElementById('cd'); if (!el) return;
@@ -547,6 +569,20 @@ document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Enter' && S.items[S.i]) { ev.preventDefault(); goSearch(S.items[S.i].k, S.items[S.i].v); }
 });
 
+/* ---------------- LITTLE LUXURIES ---------------- */
+// a soft gold reflection follows the pointer on cards, like light on a polished case
+document.addEventListener('pointermove', (ev) => {
+  const c = ev.target.closest && ev.target.closest('.hl .card, .way'); if (!c) return;
+  const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (ev.clientX - r.left) + 'px'); c.style.setProperty('--my', (ev.clientY - r.top) + 'px');
+}, { passive: true });
+// the event cover drifts slightly slower than the page
+function parallax() {
+  const im = document.querySelector('.pwin img'); if (!im) return;
+  const r = im.parentNode.getBoundingClientRect(); const k = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
+  im.style.transform = 'translate3d(0,' + (k * -7).toFixed(2) + '%,0) scale(1.14)';
+}
+window.addEventListener('scroll', () => requestAnimationFrame(parallax), { passive: true });
+
 /* ---------------- TOUR ---------------- */
 let TOURI = 0, tourFocus = null;
 function openTour(i) {
@@ -722,6 +758,7 @@ function sketchSVG() {
   // breguet hands, real Geneva time
   o += '<g filter="url(#hs)"><g class="wh2" id="hh"><g class="skt" style="--d:' + D(200) + 'ms" stroke="' + G + '" fill="none" stroke-linecap="round"><path d="M200 266 L200 199 M200 186 L200 172" stroke-width="2.6"/><circle cx="200" cy="192.5" r="6.5" stroke-width="2"/></g></g>';
   o += '<g class="wh2" id="mh"><g class="skt" style="--d:' + D(120) + 'ms" stroke="' + G + '" fill="none" stroke-linecap="round"><path d="M200 270 L200 160 M200 148 L200 128" stroke-width="2"/><circle cx="200" cy="154" r="5.5" stroke-width="1.7"/></g></g></g>';
+  o += '<g class="wsec" style="animation-delay:-' + (now.getSeconds() + now.getMilliseconds() / 1000).toFixed(2) + 's"><g class="skt" style="--d:' + d + 'ms"><path d="M200 278 L200 118" stroke="' + G + '" stroke-width=".9" stroke-linecap="round"/><circle cx="200" cy="270" r="3" fill="none" stroke="' + G + '" stroke-width=".9"/></g></g>';
   o += '<circle cx="200" cy="250" r="4" fill="' + G + '" class="skt" style="--d:' + d + 'ms"/><circle cx="200" cy="250" r="1.4" fill="#0F1B2D" class="skt" style="--d:' + d + 'ms"/>';
   // crown at 3 o'clock? (pendant at top already) + dimension note
   const nd = D(200);
@@ -745,14 +782,10 @@ function observe() {
 }
 function countUp() {
   const els = [...document.querySelectorAll('[data-count]')]; if (!els.length) return;
+  els.forEach((el) => { el.innerHTML = reels(el.dataset.count, 0); });
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce) return;
-  els.forEach((el) => { el.textContent = '0'; });
-  const run = () => {
-    const t0 = performance.now();
-    const step = (now) => { const p = Math.min(1, (now - t0) / 2000); const k = 1 - Math.pow(1 - p, 3); els.forEach((el) => { el.textContent = Math.round(+el.dataset.count * k); }); if (p < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
-  };
+  const run = () => { let k = 0; els.forEach((el) => el.querySelectorAll('.rli').forEach((x) => { x.style.transitionDelay = (k++ * 110) + 'ms'; x.classList.add('slow'); x.style.setProperty('--n', x.dataset.v); })); };
+  if (reduce) { run(); return; }
   const go = () => { if (!introDone) { setTimeout(go, 200); return; } setTimeout(run, 250); };
   const box = els[0].closest('.stats') || els[0];
   if (!('IntersectionObserver' in window)) { go(); return; }
@@ -787,6 +820,11 @@ function route() {
   const app = document.getElementById('app');
   const H = 'World Watch Calendar';
   app.classList.toggle('home', p === '/');
+  const changed = lastPath !== null && lastPath !== p; lastPath = p;
+  if (changed && introDone && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    app.classList.remove('pgin'); void app.offsetWidth; app.classList.add('pgin');
+    const sw = document.createElement('div'); sw.className = 'sweep'; document.body.appendChild(sw); setTimeout(() => sw.remove(), 900);
+  }
   if (GLM.api && p !== '/map') { GLM.api.destroy(); GLM.api = null; }
   if (p.startsWith('/event/')) { const id = decodeURIComponent(p.slice(7)); const e = byId[id]; app.innerHTML = pageEvent(id); setMeta((e ? e.n + ' · ' : 'Event not found · ') + H, e ? e.n + ': ' + range(e.s, e.e) + ', ' + place(e) + '. ' + (e.desc || 'Dates, venue and official website.') : ''); if (e) eventJsonLd(e); tickCountdown(); }
   else if (p === '/agenda') { app.innerHTML = pageAgenda(); renderAgenda(); setMeta('Agenda · ' + H, 'Month-by-month agenda of watch fairs, collector shows, auctions and watch weeks worldwide.'); }
@@ -799,11 +837,12 @@ function route() {
   else if (p === '/') { app.innerHTML = pageHome(); heroStart(); renderList(); setMeta(H + ' · The international watch fair calendar', 'The free, open calendar of watch fairs and events worldwide: trade fairs, collector shows, auctions and watch weeks, each linked to its official source.'); countUp(); }
   else { app.innerHTML = pageNotFound(); setMeta('Page not found · ' + H); }
   if (!firstLoad) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  tickClock(); observe();
+  tickClock(); tickHeroCD(); observe(); parallax();
   firstLoad = false;
   if (location.hash === '#calendar') { const c = document.getElementById('calendar'); if (c) setTimeout(() => c.scrollIntoView({ behavior: 'smooth' }), 60); }
 }
 let firstLoad = true;
+let lastPath = null;
 let introDone = true;
 document.addEventListener('click', (ev) => {
   const ln = ev.target.closest('a[href^="/"]');
@@ -880,7 +919,7 @@ document.addEventListener('submit', (ev) => {
 });
 window.addEventListener('popstate', () => route());
 window.addEventListener('scroll', () => { const h = document.documentElement; const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight); document.getElementById('prog').style.width = (p * 100) + '%'; }, { passive: true });
-setInterval(() => { tickClock(); tickCountdown(); }, 1000);
+setInterval(() => { tickClock(); tickCountdown(); tickHeroCD(); }, 1000);
 async function boot() {
   // Start the intro straight away (first visit of the home page in this browser session), while the events load underneath.
   let seen = false; try { seen = sessionStorage.getItem('hc-intro') === '1'; sessionStorage.setItem('hc-intro', '1'); } catch (x) {}
