@@ -46,61 +46,55 @@ export function guideArt(kind) {
     + '</svg>';
 }
 
-/* ---------- who are you? ---------- */
-export const PERSONAS = [
-  ['lover', 'Watch lover', 'cal', 'Tick <b>Open to the public</b> and <b>Free entry</b> in the calendar to find fairs you can simply walk into.'],
-  ['collector', 'Collector', 'cal', 'Pick <b>Vintage &amp; collectors</b> in the calendar, then tap ★ to build your own season.'],
-  ['journalist', 'Journalist', 'ag', 'Plan your coverage month by month in the <b>Agenda</b>: busy weeks are flagged ⚡.'],
-  ['brand', 'Brand or retailer', 'map', 'Open the <b>Map</b> to see where the trade meets, country by country and city by city.'],
-  ['traveller', 'Traveller', 'map', 'Going abroad? Click a country on the <b>Map</b> to see what is on while you are there.'],
-  ['organiser', 'Organiser', 'add', 'List your event for free: it is online in a few minutes and stays yours to update.']
-];
-const WAYS = {
-  map: ['/map', 'Open the map'],
-  cal: ['/#calendar', 'Browse the calendar'],
-  ag: ['/agenda', 'Open the agenda'],
-  add: ['/add', 'Add your event']
-};
-export function personaTip(key) {
-  const p = PERSONAS.find((x) => x[0] === key) || PERSONAS[0];
-  const w = WAYS[p[2]];
-  return '<span>' + p[3] + '</span><a href="' + w[0] + '" class="ul whogo"' + (w[0] === '/#calendar' ? ' data-act="scroll"' : '') + '>' + w[1] + ' ' + ARROW + '</a>';
-}
-export function personaWay(key) { const p = PERSONAS.find((x) => x[0] === key); return p ? p[2] : ''; }
-
-/* ---------- home block ---------- */
+/* ---------- home block: three ways to explore ---------- */
 const CARDS = [
-  ['map', '01', 'The map', 'See the watch world at a glance.', ['Click a gold country to zoom in', 'Pick a city to see its events', 'A pulsing dot means it is happening now']],
-  ['cal', '02', 'The calendar', 'Every upcoming event, filtered your way.', ['Search by name, city or organiser', 'Filter by type, country, free entry…', 'Tap ★ to save it to My season']],
-  ['ag', '03', 'The agenda', 'The whole month, like your own diary.', ['Each bar is an event and its length', 'Spot the busy weeks in a second', 'Add any event to your calendar']]
+  ['map', '/map', '01', 'The map', 'Spin around the watch world.', ['Click a gold country to fly in', 'Pick a city to see what is on', 'Scroll to zoom, drag to explore'], 'Try the map'],
+  ['ag', '/agenda', '02', 'The agenda', 'The season, like your own diary.', ['Each bar is an event, its length is its duration', 'Spot the busy weeks ⚡ at a glance', 'Click a bar, add it to your calendar'], 'Try the agenda'],
+  ['cal', '/#calendar', '03', 'The calendar', 'Every event, filtered your way.', ['Search a fair, a city, an organiser', 'Filter by type, country, free entry', 'Tap ★ to keep it in My season'], 'Try the calendar']
 ];
-export function homeGuide(persona) {
-  const rec = personaWay(persona);
+export function homeGuide() {
   return '<section class="wrap gd" id="guide" style="padding-top:112px;padding-bottom:24px;scroll-margin-top:20px">'
-    + '<div class="eyebrow reveal">Made for everyone</div>'
-    + '<h2 class="sec reveal">Whoever you are, <em class="g">start here.</em></h2>'
-    + '<div class="who reveal" style="--d:100ms" role="group" aria-label="Who are you?"><span class="whol">I’m a…</span>'
-    + PERSONAS.map(([k, l]) => '<button class="whoc' + (k === persona ? ' on' : '') + '" data-act="persona" data-v="' + k + '" aria-pressed="' + (k === persona) + '">' + l + '</button>').join('')
-    + '</div><p class="whotip reveal" style="--d:160ms" id="whotip" aria-live="polite">' + personaTip(persona) + '</p>'
-    + '<div class="ways">' + CARDS.map(([k, n, t, d, steps], i) => {
-      const w = WAYS[k];
-      return '<article class="way reveal' + (k === rec ? ' rec' : '') + '" data-w="' + k + '" style="--d:' + (i * 120) + 'ms">'
-        + '<div class="wart">' + guideArt(k) + '</div>'
-        + '<div class="wbody"><div class="wn">' + n + '<span class="wrec" aria-hidden="' + (k !== rec) + '">Best for you</span></div><h3>' + t + '</h3><p>' + d + '</p>'
-        + '<ol>' + steps.map((s) => '<li>' + s + '</li>').join('') + '</ol>'
-        + '<a href="' + w[0] + '" class="btn btn-line wgo"' + (w[0] === '/#calendar' ? ' data-act="scroll"' : '') + '>' + w[1] + ' ' + ARROW + '</a></div></article>';
-    }).join('') + '</div>'
+    + '<div class="eyebrow reveal">Three ways to explore</div>'
+    + '<div class="reveal" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px"><h2 class="sec">One season, <em class="g">three ways to see it.</em></h2>'
+    + '<p style="margin:0;max-width:340px;color:var(--muted);font-size:16px;line-height:1.6">Click around, zoom in, filter, save. Nothing can break, so go ahead and play.</p></div>'
+    + '<div class="ways">' + CARDS.map(([k, href, n, t, d, steps, cta], i) => '<a href="' + href + '" class="way reveal" data-w="' + k + '" style="--d:' + (i * 120) + 'ms"' + (href === '/#calendar' ? ' data-act="scroll"' : '') + '>'
+      + '<div class="wart">' + guideArt(k) + '</div>'
+      + '<div class="wbody"><div class="wn">' + n + '</div><h3>' + t + '</h3><p>' + d + '</p>'
+      + '<ol>' + steps.map((x) => '<li>' + x + '</li>').join('') + '</ol>'
+      + '<span class="btn btn-navy wgo">' + cta + ' ' + ARROW + '</span></div></a>').join('') + '</div>'
     + '<div class="extras reveal">'
     + extra('<path d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21l1.5-7L2 9.3l7-.8z"/>', 'My season', 'Save events with ★, no account needed.')
     + extra('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>', 'Sync', 'Add any event to Google, Apple or Outlook.')
     + extra('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>', 'Share', 'Send it on LinkedIn, WhatsApp or by link.')
     + extra('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 'Quick search', 'Press <kbd>/</kbd> anywhere to search.')
     + '</div>'
-    + '<div class="reveal" style="margin-top:36px;text-align:center"><a href="/guide" class="btn btn-navy" style="min-height:48px">Read the full guide ' + ARROW + '</a></div>'
+    + '<div class="reveal gcta"><span>New here? Let us show you around.</span><button class="btn btn-gold" data-act="tour">Take the 30-second tour ' + ARROW + '</button></div>'
     + '</section>';
 }
 function extra(icon, t, d) {
   return '<div class="xtra"><span class="xi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icon + '</svg></span><div><b>' + t + '</b><span>' + d + '</span></div></div>';
+}
+
+/* ---------- guided tour (header "?" button) ---------- */
+const TOUR = [
+  ['map', 'The map', 'Fly around the watch world. Gold countries have events: click one, pick a city, and every fair there is right in front of you. Scroll to zoom, drag to move.', '/map', 'Try the map'],
+  ['ag', 'The agenda', 'The season as a diary. Each bar is an event, from its first to its last day. Busy weeks are flagged ⚡ and the colour legend shows or hides each type.', '/agenda', 'Try the agenda'],
+  ['cal', 'The calendar', 'Every upcoming event in one list. Search, filter by type, country or free entry, and browse month by month.', '/#calendar', 'Try the calendar'],
+  ['event', 'Keep what you like', 'Tap ★ to save an event to My season, add it to Google, Apple or Outlook in one click, or share it with a friend.', null, null],
+  ['add', 'Organising an event?', 'List it for free in about three minutes. It appears straight away in the calendar, the agenda and on the map.', '/add', 'Add your event']
+];
+export const TOUR_LEN = TOUR.length;
+export function tourHTML(i) {
+  const [art, t, d, href, cta] = TOUR[i];
+  const vis = art === 'event' ? eventMock() : art === 'add' ? addMock() : guideArt(art);
+  return '<div class="tcard" role="document"><button class="tx" data-act="tclose" aria-label="Close the tour"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+    + '<div class="tvis' + (art === 'event' || art === 'add' ? ' tmock' : '') + '">' + vis + '</div>'
+    + '<div class="tbody"><div class="tstep">' + (i + 1) + ' / ' + TOUR.length + '</div><h2 id="ttitle">' + t + '</h2><p>' + d + '</p>'
+    + '<div class="tdots" aria-hidden="true">' + TOUR.map((_, j) => '<span' + (j === i ? ' class="on"' : '') + '></span>').join('') + '</div>'
+    + '<div class="tnav">' + (i > 0 ? '<button class="btn btn-line" data-act="tprev">Back</button>' : '<span></span>')
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">' + (href ? '<a href="' + href + '" class="btn btn-line" data-act="tgo">' + cta + '</a>' : '')
+    + (i < TOUR.length - 1 ? '<button class="btn btn-navy" data-act="tnext">Next ' + ARROW + '</button>' : '<a href="/guide" class="btn btn-navy" data-act="tgo">Full guide ' + ARROW + '</a>') + '</div></div>'
+    + '</div></div>';
 }
 
 /* ---------- full guide page ---------- */
@@ -110,16 +104,16 @@ const SECTIONS = [
     ['Pick a city', 'Each dot is a city. Click it to open the list of its events, then choose one to see its details.'],
     ['Move around freely', 'Scroll to zoom and drag to move. On a phone, use two fingers. <b>World view</b> takes you back to the start.']
   ], ['A softly pulsing dot means an event is happening right now.', 'City names appear once you zoom in on a country.'], ['/map', 'Open the map']],
-  ['calendar', 'The calendar', 'Every upcoming event, filtered your way.', 'cal', [
-    ['Search', 'Type a fair, a city or an organiser in the search field. From any page, press <kbd>/</kbd> to search straight away.'],
-    ['Filter', 'Choose a type (trade fairs, public fairs, jewellery, vintage, auctions), a country or a size, and tick <b>Open to the public</b> or <b>Free entry</b>.'],
-    ['Browse by month', 'Swipe through the month tabs: the number shows how many events each month holds.']
-  ], ['Tap ★ on any event to keep it in <b>My season</b>, then use the ★ filter to see only your picks.'], ['/#calendar', 'Browse the calendar']],
   ['agenda', 'The agenda', 'The whole month, like your own diary.', 'ag', [
     ['Read the month', 'Each coloured bar is an event: where it starts, where it ends and how long it lasts.'],
     ['Move through the season', 'Use the arrows or the month strip. The strip shows how busy each month is.'],
     ['Focus', 'Hide or show event types with the colour legend. Click a bar to see the details on the side.']
   ], ['Weeks with four events or more are flagged ⚡ <b>Busy week</b>.', 'From the side panel, add the event to Google Calendar in one click.'], ['/agenda', 'Open the agenda']],
+  ['calendar', 'The calendar', 'Every upcoming event, filtered your way.', 'cal', [
+    ['Search', 'Type a fair, a city or an organiser in the search field. From any page, press <kbd>/</kbd> to search straight away.'],
+    ['Filter', 'Choose a type (trade fairs, public fairs, jewellery, vintage, auctions), a country or a size, and tick <b>Open to the public</b> or <b>Free entry</b>.'],
+    ['Browse by month', 'Swipe through the month tabs: the number shows how many events each month holds.']
+  ], ['Tap ★ on any event to keep it in <b>My season</b>, then use the ★ filter to see only your picks.'], ['/#calendar', 'Browse the calendar']],
   ['event', 'Event pages', 'Everything you need, and the official source.', null, [
     ['Key facts', 'Dates, duration, venue, type, number of exhibitors, who can attend and who organises it.'],
     ['Official website', 'Every event links to its organiser’s website: always check final details there.'],

@@ -2,7 +2,7 @@ document.documentElement.classList.add('js');
 import { api, DEMO } from './api.js';
 import MAP from './map.json';
 import { geoNaturalEarth1 } from 'd3-geo';
-import { homeGuide, personaTip, personaWay, pageGuideBody } from './guide.js';
+import { homeGuide, pageGuideBody, tourHTML, TOUR_LEN } from './guide.js';
 
 const D = { map: { base: Object.values(MAP.c).join(''), hi: MAP.c }, box: MAP.box };
 const BASE_PATHS = Object.values(MAP.c).map((d) => '<path d="' + d + '"/>').join('');
@@ -92,9 +92,10 @@ const STAR = (on) => '<svg width="20" height="20" viewBox="0 0 24 24" fill="' + 
 function header(active) {
   const l = (h, t, k) => '<a href="' + h + '" class="nl ul' + (active === k ? ' on' : '') + '"' + (active === k ? ' aria-current="page"' : '') + '>' + t + '</a>';
   return '<header class="hd"><div class="wrap-l hdi"><a href="/" class="logo">World Watch Calendar</a><div class="hdr">'
+    + '<button class="sbtn tourb" data-act="tour" aria-label="Take the tour of the site" title="Take the tour"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/></svg></button>'
     + '<button class="sbtn" data-act="search" aria-label="Search events (shortcut /)" title="Search (/)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>'
     + '<button class="menu" data-act="menu" aria-label="Open menu" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'
-    + '<nav class="nav" id="nav" aria-label="Main"><span class="clock" id="clock">Geneva --:--</span>' + l('/', 'Calendar', 'home') + l('/agenda', 'Agenda', 'agenda') + l('/map', 'Map', 'map') + l('/guide', 'Guide', 'guide') + l('/about', 'About', 'about')
+    + '<nav class="nav" id="nav" aria-label="Main"><span class="clock" id="clock">Geneva --:--</span>' + l('/', 'Calendar', 'home') + l('/agenda', 'Agenda', 'agenda') + l('/map', 'Map', 'map') + l('/about', 'About', 'about')
     + '<a href="/add" class="pill' + (active === 'add' ? ' on' : '') + '">Add your event</a></nav></div></div></header>';
 }
 function footer(with289) {
@@ -105,7 +106,6 @@ function footer(with289) {
 }
 
 /* ---------------- HOME ---------------- */
-let WHO = 'lover'; try { WHO = localStorage.getItem('wwc-who') || 'lover'; } catch (x) {}
 const F = { q: '', country: '', month: '', size: '', type: 'all', open: false, free: false, mine: false, autoMonth: true };
 function miniMap() {
   const up = mapEvents(); const cnt = {}, lv = {};
@@ -137,7 +137,7 @@ function pageHome() {
     + '<div class="stat reveal" style="--d:130ms"><div class="n" data-count="' + countries + '">' + countries + '</div><div class="l">Countries</div></div>'
     + '<div class="stat reveal" style="--d:260ms"><div class="n"><span data-count="100">100</span>%</div><div class="l">Linked to official sources</div></div>'
     + '<div class="stat reveal" style="--d:390ms"><div class="n">Free</div><div class="l">For visitors &amp; organisers</div></div></div></div></section>'
-    + homeGuide(WHO)
+    + homeGuide()
     + '<section class="dark" style="border-top:1px solid var(--line-d)"><div class="wrap" style="padding-top:96px;padding-bottom:104px"><div class="eyebrow reveal">Explore by country</div>'
     + '<div class="reveal" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px"><h2 class="sec">Where the watch world <em class="g">meets.</em></h2><a href="/map" class="ul" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)">Open the world map</a></div>'
     + '<a href="/map" class="mapcard reveal z" style="margin-top:44px" aria-label="Open the interactive world map">' + miniMap() + '<span class="btn btn-gold cta" style="min-height:42px;padding:0 18px;font-size:12px;letter-spacing:.14em;text-transform:uppercase">Explore the map ' + ARR + '</span></a></div></section>'
@@ -549,6 +549,38 @@ document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Enter' && S.items[S.i]) { ev.preventDefault(); goSearch(S.items[S.i].k, S.items[S.i].v); }
 });
 
+/* ---------------- TOUR ---------------- */
+let TOURI = 0, tourFocus = null;
+function openTour(i) {
+  tipSeen();
+  TOURI = Math.max(0, Math.min(TOUR_LEN - 1, i));
+  let o = document.getElementById('tour');
+  if (!o) { tourFocus = document.activeElement; o = document.createElement('div'); o.id = 'tour'; o.className = 'tour'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'ttitle'); o.dataset.act = 'tbg'; document.body.appendChild(o); document.documentElement.style.overflow = 'hidden'; }
+  o.innerHTML = tourHTML(TOURI);
+  const b = o.querySelector('[data-act=tnext]') || o.querySelector('[data-act=tgo]') || o.querySelector('.tx'); if (b) b.focus({ preventScroll: true });
+}
+function closeTour() {
+  const o = document.getElementById('tour'); if (!o) return;
+  o.classList.add('out'); document.documentElement.style.overflow = '';
+  setTimeout(() => o.remove(), 200); if (tourFocus && tourFocus.focus) tourFocus.focus({ preventScroll: true });
+}
+document.addEventListener('keydown', (ev) => {
+  if (!document.getElementById('tour')) return;
+  if (ev.key === 'Escape') { ev.preventDefault(); closeTour(); }
+  else if (ev.key === 'ArrowRight') { ev.preventDefault(); openTour(TOURI + 1); }
+  else if (ev.key === 'ArrowLeft') { ev.preventDefault(); openTour(TOURI - 1); }
+}, true);
+// First visit: a small bubble under the "?" button so people know the tour exists.
+function tipSeen() { try { localStorage.setItem('wwc-tip', '1'); } catch (x) {} document.querySelectorAll('.ttip').forEach((n) => n.remove()); }
+function showTourTip() {
+  let seen = false; try { seen = localStorage.getItem('wwc-tip') === '1'; } catch (x) {}
+  if (seen || !introDone || document.querySelector('.ttip')) return;
+  const b = document.querySelector('.tourb'); if (!b || !b.offsetParent) return;
+  const tip = document.createElement('div'); tip.className = 'ttip'; tip.setAttribute('role', 'note');
+  tip.innerHTML = '<button data-act="tour" class="ttg">New here? <b>Take the 30-second tour</b></button><button class="ttx" data-act="tipx" aria-label="Dismiss">×</button>';
+  b.parentNode.style.position = 'relative'; b.parentNode.appendChild(tip);
+}
+
 /* ---------------- ADMIN ---------------- */
 const ADMF = { q: '', f: 'all' };
 const AUTH = { ok: false, email: '', contacts: {}, checked: false };
@@ -777,7 +809,7 @@ function route() {
   else if (p === '/') { app.innerHTML = pageHome(); heroStart(); renderList(); setMeta(H + ' · The international watch fair calendar', 'The free, open calendar of watch fairs and events worldwide: trade fairs, collector shows, auctions and watch weeks, each linked to its official source.'); countUp(); }
   else { app.innerHTML = pageNotFound(); setMeta('Page not found · ' + H); }
   if (!firstLoad) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  tickClock(); observe();
+  tickClock(); observe(); setTimeout(showTourTip, firstLoad ? 1800 : 600);
   firstLoad = false;
   if (location.hash === '#calendar') { const c = document.getElementById('calendar'); if (c) setTimeout(() => c.scrollIntoView({ behavior: 'smooth' }), 60); }
 }
@@ -785,7 +817,7 @@ let firstLoad = true;
 let introDone = true;
 document.addEventListener('click', (ev) => {
   const ln = ev.target.closest('a[href^="/"]');
-  if (ln && !ev.defaultPrevented && ev.button === 0 && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && !ev.altKey && !ln.target && !ln.hasAttribute('download') && !ln.closest('[data-act]:not(a)')) {
+  if (ln && !ev.defaultPrevented && ev.button === 0 && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && !ev.altKey && !ln.target && !ln.hasAttribute('download') && !ln.closest('[data-act]:not(a)') && !ln.closest('.tour')) {
     const href = ln.getAttribute('href');
     if (!/\.(xml|txt|png|jpg|ics|csv)$/.test(href)) {
       ev.preventDefault(); const n = document.getElementById('nav'); if (n) n.classList.remove('open');
@@ -810,13 +842,12 @@ document.addEventListener('click', (ev) => {
   if (a === 'sclose') { closeSearch(); return; }
   if (a === 'sgo') { goSearch(t.dataset.k, t.dataset.v); return; }
   if (a === 'menu') { const n = document.getElementById('nav'); const o = n.classList.toggle('open'); t.setAttribute('aria-expanded', o); return; }
-  if (a === 'persona') {
-    WHO = v; try { localStorage.setItem('wwc-who', v); } catch (x) {}
-    document.querySelectorAll('[data-act=persona]').forEach((b) => { const on = b.dataset.v === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-    const tip = document.getElementById('whotip'); if (tip) { tip.classList.remove('swap'); void tip.offsetWidth; tip.innerHTML = personaTip(v); tip.classList.add('swap'); }
-    const w = personaWay(v); document.querySelectorAll('.way').forEach((c) => { const on = c.dataset.w === w; c.classList.toggle('rec', on); c.querySelector('.wrec').setAttribute('aria-hidden', !on); });
-    return;
-  }
+  if (a === 'tour') { ev.preventDefault(); openTour(0); return; }
+  if (a === 'tnext') { openTour(TOURI + 1); return; }
+  if (a === 'tprev') { openTour(TOURI - 1); return; }
+  if (a === 'tclose' || a === 'tbg') { if (a === 'tbg' && ev.target !== t) return; closeTour(); return; }
+  if (a === 'tgo') { ev.preventDefault(); closeTour(); const h = t.getAttribute('href'); if (h === '/#calendar' && location.pathname === '/') { const c = document.getElementById('calendar'); if (c) c.scrollIntoView({ behavior: 'smooth' }); } else go(h); return; }
+  if (a === 'tipx') { tipSeen(); return; }
   if (a === 'gjump') { ev.preventDefault(); const c = document.getElementById(v); if (c) { c.scrollIntoView({ behavior: 'smooth' }); history.replaceState({}, '', '#' + v); } return; }
   if (a === 'scroll') { ev.preventDefault(); const c = document.getElementById('calendar'); if (c) c.scrollIntoView({ behavior: 'smooth' }); return; }
   if (a === 'type') { F.type = v; F.autoMonth = true; renderList(); return; }
@@ -878,7 +909,7 @@ async function boot() {
   route();
   // After the name: a quick "hello" in the languages of the watch world, then the site appears.
   let closed = false;
-  const close = () => { if (closed) return; closed = true; l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); };
+  const close = () => { if (closed) return; closed = true; l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); setTimeout(showTourTip, 1200); };
   l.addEventListener('click', close);
   setTimeout(() => {
     if (closed) return;

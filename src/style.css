@@ -390,23 +390,10 @@ button:disabled{cursor:wait}
 .gllabel span{display:block;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}.gllabel.on span,.glmap.zl .gllabel span{opacity:1;visibility:visible}.glmap.zl .gllabel.dim span{opacity:.5}
 .glmap .maplibregl-canvas{cursor:grab}.glmap .maplibregl-canvas:active{cursor:grabbing}
 /* ---------- guide: home block ---------- */
-.who{margin-top:36px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.whol{font-family:var(--serif);font-size:24px;font-style:italic;margin-right:6px}
-.whoc{min-height:42px;padding:0 18px;border-radius:999px;border:1px solid #DAD8D2;background:#fff;color:var(--ink);font:500 14px var(--sans);cursor:pointer;transition:background .2s,border-color .2s,color .2s,transform .2s}
-.whoc:hover{border-color:var(--navy);transform:translateY(-1px)}
-.whoc.on{background:var(--navy);border-color:var(--navy);color:#fff}
-.whotip{margin:20px 0 0;max-width:760px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;font-size:17px;line-height:1.6;color:var(--ink)}
-.whotip b{font-weight:600}
-.whotip.swap{animation:tipin .35s ease}
-@keyframes tipin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.whogo{display:inline-flex;align-items:center;gap:6px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .ways{margin-top:48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:24px}
-.way{position:relative;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden;transition:border-color .3s,box-shadow .3s,transform .3s}
-.way:hover{transform:translateY(-3px);border-color:#C9C6BE}
-.way.rec{border-color:var(--gold2);box-shadow:0 0 0 1px var(--gold2),0 18px 40px -24px rgba(15,27,45,.35)}
-.wn{display:flex;align-items:center;gap:12px;min-height:22px}
-.wrec{padding:4px 10px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;opacity:0;transform:translateY(-4px);transition:opacity .3s,transform .3s;pointer-events:none}
-.way.rec .wrec{opacity:1;transform:none}
+.way{position:relative;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden;transition:border-color .3s,box-shadow .3s,transform .3s}
+.way:hover{transform:translateY(-4px);border-color:var(--gold2);box-shadow:0 22px 44px -28px rgba(15,27,45,.4)}
+.way:hover .wgo{background:#1B2C47}.way:hover .arr{transform:translateX(4px)}.way .arr{transition:transform .25s}
 .wart{padding:16px 16px 0}
 .gart{display:block;width:100%;height:auto;border-radius:8px}
 .wbody{display:flex;flex-direction:column;flex:1;padding:24px 28px 28px}
@@ -482,4 +469,37 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 .faq summary::after{content:"+";font-family:var(--serif);font-size:28px;color:var(--gold2);transition:transform .25s}
 .faq details[open] summary::after{transform:rotate(45deg)}
 .faq p{margin:0 0 22px;max-width:680px;color:var(--muted);line-height:1.65}
-@media (max-width:640px){.whol{flex:1 1 100%;font-size:22px}.whoc{min-height:40px;padding:0 14px;font-size:13px}.whotip{font-size:16px}.gsec{padding:64px 0;gap:36px}.wbody{padding:22px}}
+@media (max-width:640px){.gsec{padding:64px 0;gap:36px}.wbody{padding:22px}}
+.gcta{margin-top:40px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 20px;text-align:center}
+.gcta span{font-family:var(--serif);font-size:24px;font-style:italic}
+/* tour */
+.tourb{position:relative}
+.tour{position:fixed;inset:0;z-index:96;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(10,19,34,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:fade .2s ease both}
+.tour.out{opacity:0;transition:opacity .2s}
+.tcard{position:relative;width:100%;max-width:560px;max-height:calc(100vh - 40px);overflow:auto;background:#fff;border-radius:14px;box-shadow:0 40px 80px -30px rgba(0,0,0,.5);animation:tcard .3s cubic-bezier(.2,.7,.2,1)}
+@keyframes tcard{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+.tx{position:absolute;top:12px;right:12px;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tx:hover{background:#fff;box-shadow:0 0 0 1px var(--line)}
+.tvis{padding:20px 20px 0}
+.tvis.tmock{padding:20px 40px 0}
+.tvis.tmock .emock{box-shadow:none;padding:20px}
+.tvis.tmock .amf:nth-child(n+4){display:none}
+.tbody{padding:22px 28px 26px}
+.tstep{font-size:11px;letter-spacing:.2em;color:var(--gold2);font-weight:600}
+.tbody h2{margin:8px 0 0;font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.1}
+.tbody p{margin:10px 0 0;color:var(--muted);font-size:15.5px;line-height:1.6}
+.tdots{margin-top:18px;display:flex;gap:6px}
+.tdots span{width:6px;height:6px;border-radius:3px;background:#DAD8D2;transition:width .25s,background .25s}
+.tdots span.on{width:22px;background:var(--navy)}
+.tnav{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tnav .btn{min-height:46px;font-size:14px}
+.ttip{position:absolute;top:calc(100% + 12px);right:0;z-index:40;display:flex;align-items:center;gap:2px;padding:4px 4px 4px 16px;border-radius:999px;background:var(--gold);color:var(--navy);box-shadow:0 14px 30px -12px rgba(0,0,0,.5);white-space:nowrap;animation:ttip .45s cubic-bezier(.2,.7,.2,1) both}
+.ttg{border:0;background:none;color:inherit;font:14px var(--sans);cursor:pointer;padding:8px 0}
+.ttg b{font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.ttx{width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:var(--navy);font-size:18px;cursor:pointer}
+.ttx:hover{background:rgba(15,27,45,.1)}
+@keyframes ttip{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (max-width:640px){.tbody{padding:18px 20px 22px}.tbody h2{font-size:28px}.tvis.tmock{padding:16px 20px 0}.tnav{flex-wrap:wrap}.tnav>span{display:none}.ttg{font-size:13px}}
+@media (max-width:480px){.hdr{gap:8px}.sbtn,.menu{width:40px;height:40px}}
+@media (max-width:390px){.logo{font-size:18px}.hdi{gap:10px}.hdr{gap:6px}}
+@media (max-width:340px){.logo{font-size:16px}.wrap-l.hdi{padding:0 16px}}
