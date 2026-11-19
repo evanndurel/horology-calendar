@@ -415,7 +415,7 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 .gpulse{transform-box:fill-box;transform-origin:center;animation:gp 2.4s ease-out infinite}
 @keyframes gp{0%{transform:scale(1);opacity:.9}100%{transform:scale(3.4);opacity:0}}
 .gcur{animation:gcur 6s cubic-bezier(.5,0,.2,1) infinite}
-@keyframes gcur{0%,8%{transform:translate(250px,150px)}38%,100%{transform:translate(154px,60px)}}
+@keyframes gcur{0%,8%{transform:translate(calc(var(--gx) + 300px),calc(var(--gy) + 230px))}38%,100%{transform:translate(var(--gx),var(--gy))}}
 .gcty{opacity:.35;animation:gcty 6s ease infinite}
 @keyframes gcty{0%,36%{opacity:.35}44%,92%{opacity:1}100%{opacity:.35}}
 .gpop{opacity:0;animation:gpop 6s ease infinite}

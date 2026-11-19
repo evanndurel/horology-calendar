@@ -2,19 +2,27 @@
    A playful "find your way" block for the home page and a full /guide page.
    Illustrations are tiny inline SVGs animated with CSS (disabled for reduced motion). */
 
+import MAP from './map.json';
+import { geoNaturalEarth1 } from 'd3-geo';
+const PROJ = geoNaturalEarth1().fitExtent([[10, 10], [990, 490]], { type: 'Sphere' });
+
 const ARROW = '<svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
 /* ---------- illustrations ---------- */
 export function guideArt(kind) {
   if (kind === 'map') {
-    const dots = [[86, 70, 0], [150, 62, 1], [158, 74, 0], [176, 68, 0], [214, 96, 0], [262, 92, 1], [252, 120, 0], [98, 96, 0]];
-    return '<svg class="gart gmap" viewBox="0 0 320 180" role="img" aria-label="Animated preview of the world map">'
-      + '<rect width="320" height="180" rx="10" fill="#0E1A2E"/>'
-      + '<g fill="#1B2A44"><path d="M40 52c18-14 52-16 70-6 10 6 8 18 18 26 6 6 2 18-8 22-14 6-20 22-34 22-16 0-18-16-30-24-12-8-30-26-16-40z"/><path d="M132 44c16-8 40-8 56 0 14 6 34 4 48 10 16 6 34 6 44 18 8 10-4 22-18 22-12 0-18 12-30 14-14 2-22-10-34-8-10 2-12 14-22 12-12-2-8-18-18-24-10-6-28-2-32-14-4-10 0-24 6-30z"/><path d="M226 112c10-6 26-4 34 4 6 6 2 18-8 20-10 2-22 0-28-8-4-6-4-12 2-16z"/></g>'
-      + '<path class="gcty" d="M138 52c10-5 24-5 32 0 6 4 4 14-4 18-8 4-20 4-26-2-6-5-6-12-2-16z" fill="#3A3424" stroke="#B8975A" stroke-width="1"/>'
-      + dots.map(([x, y, live], i) => '<g transform="translate(' + x + ' ' + y + ')">' + (live ? '<circle class="gpulse" r="4" fill="none" stroke="#E4CF9F" stroke-width="1.2" style="animation-delay:' + i * 0.3 + 's"/>' : '') + '<circle r="3" fill="#E4CF9F"/></g>').join('')
-      + '<g class="gcur"><path d="M0 0l0 14 4-4 3 7 3-1-3-7 6 0z" fill="#fff" stroke="#0E1A2E" stroke-width="1"/></g>'
-      + '<g class="gpop"><rect x="104" y="20" width="104" height="26" rx="13" fill="#fff"/><text x="156" y="37" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11" fill="#0E1116">Geneva · 3 events</text></g>'
+    // the real world map (same drawing and projection as the site's map), framed 16:9
+    const has = ['US', 'GB', 'FR', 'DE', 'CH', 'IT', 'ES', 'JP', 'HK', 'SG', 'AE', 'IN', 'TH', 'CZ', 'GR', 'TR', 'BH'];
+    const cities = [[6.14, 46.2, 1], [-74, 40.7, 1], [-115.1, 36.2, 0], [-80.2, 25.8, 0], [-0.13, 51.5, 0], [2.35, 48.86, 0], [11.58, 48.14, 0], [114.17, 22.3, 1], [139.7, 35.7, 0], [55.3, 25.2, 0], [103.8, 1.35, 0], [100.5, 13.75, 0], [72.88, 19.08, 0], [28.98, 41.0, 0], [23.73, 37.98, 0], [14.42, 50.08, 0]];
+    const G = PROJ([6.14, 46.2]);
+    return '<svg class="gart gmap" viewBox="40 -37 890 500" role="img" aria-label="Animated preview of the world map" style="--gx:' + G[0].toFixed(1) + 'px;--gy:' + G[1].toFixed(1) + 'px">'
+      + '<rect x="0" y="-60" width="1000" height="560" fill="#0E1A2E"/>'
+      + '<g fill="#1B2A44" stroke="#2C3D5C" stroke-width="1">' + Object.entries(MAP.c).filter(([cc]) => !has.includes(cc)).map(([, d]) => '<path d="' + d + '"/>').join('') + '</g>'
+      + '<g fill="#4A3F28" stroke="#8A7446" stroke-width="1">' + has.filter((cc) => MAP.c[cc] && cc !== 'CH').map((cc) => '<path d="' + MAP.c[cc] + '"/>').join('') + '</g>'
+      + (MAP.c.CH ? '<path class="gcty" d="' + MAP.c.CH + '" fill="#C9A86A" stroke="#E4CF9F" stroke-width="1"/>' : '')
+      + cities.map(([lo, la, live], k) => { const [x, y] = PROJ([lo, la]); return '<g transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ')">' + (live ? '<circle class="gpulse" r="9" fill="none" stroke="#E4CF9F" stroke-width="2.4" style="animation-delay:' + k * 0.4 + 's"/>' : '') + '<circle r="7.5" fill="#E4CF9F" stroke="#0A1322" stroke-width="1.6"/></g>'; }).join('')
+      + '<g class="gcur"><path transform="scale(2.2)" d="M0 0l0 22 6.4-6.4 4.8 11.2 4.8-1.6-4.8-11.2 9.6 0z" fill="#fff" stroke="#0E1A2E" stroke-width="1.2"/></g>'
+      + '<g transform="translate(' + (G[0] - 160).toFixed(1) + ' ' + (G[1] - 118).toFixed(1) + ')"><g class="gpop"><rect width="320" height="70" rx="35" fill="#fff"/><text x="160" y="46" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="32" fill="#0E1116">Geneva · 3 events</text></g></g>'
       + '</svg>';
   }
   if (kind === 'cal') {
@@ -24,12 +32,12 @@ export function guideArt(kind) {
       + '<g font-family="Inter,system-ui,sans-serif" font-size="9">'
       + '<rect x="16" y="14" width="40" height="18" rx="9" fill="#0F1B2D"/><text x="36" y="26" text-anchor="middle" fill="#fff">All</text>'
       + '<rect x="62" y="14" width="58" height="18" rx="9" fill="#fff" stroke="#DAD8D2"/><text x="91" y="26" text-anchor="middle" fill="#0E1116">Public fairs</text>'
-      + '<g class="gchip"><rect x="126" y="14" width="62" height="18" rx="9" fill="#fff" stroke="#DAD8D2"/><text x="157" y="26" text-anchor="middle" fill="#0E1116">Free entry</text></g>'
+      + '<g class="gchip"><rect x="126" y="14" width="62" height="18" rx="9" fill="#fff" stroke="#DAD8D2"/><text x="157" y="26" text-anchor="middle" fill="#0E1116">Switzerland</text></g>'
       + '<rect x="230" y="14" width="74" height="18" rx="9" fill="#fff" stroke="#DAD8D2"/><text x="267" y="26" text-anchor="middle" fill="#5A6170">Search…  /</text>'
       + rows.map(([m, d, n, c], i) => '<g class="grow" style="animation-delay:' + (0.2 + i * 0.25) + 's"><rect x="16" y="' + (44 + i * 44) + '" width="288" height="36" rx="5" fill="#fff" stroke="#E7E5E0"/>'
         + '<text x="34" y="' + (58 + i * 44) + '" text-anchor="middle" fill="#5A6170" font-size="7" letter-spacing="1">' + m + '</text><text x="34" y="' + (72 + i * 44) + '" text-anchor="middle" fill="#0E1116" font-size="14" font-family="Georgia,serif">' + d + '</text>'
         + '<text x="58" y="' + (59 + i * 44) + '" fill="#0E1116" font-size="10.5">' + n + '</text><text x="58" y="' + (72 + i * 44) + '" fill="#5A6170">' + c + '</text>'
-        + '<path class="' + (i === 0 ? 'gstar' : '') + '" transform="translate(280 ' + (55 + i * 44) + ') scale(.6)" d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21l1.5-7L2 9.3l7-.8z" fill="none" stroke="#8A909A" stroke-width="1.6" stroke-linejoin="round"/></g>').join('')
+        + '</g>').join('')
       + '</g></svg>';
   }
   // agenda
@@ -49,13 +57,13 @@ export function guideArt(kind) {
 /* ---------- home block: three ways to explore ---------- */
 const CARDS = [
   ['map', '/map', '01', 'The map', 'Spin around the watch world.', ['Click a gold country to fly in', 'Pick a city to see what is on', 'Scroll to zoom, drag to explore'], 'Try the map'],
-  ['ag', '/agenda', '02', 'The agenda', 'The season, like your own diary.', ['Each bar is an event, its length is its duration', 'Spot the busy weeks ⚡ at a glance', 'Click a bar, add it to your calendar'], 'Try the agenda'],
-  ['cal', '/#calendar', '03', 'The calendar', 'Every event, filtered your way.', ['Search a fair, a city, an organiser', 'Filter by type, country, free entry', 'Tap ★ to keep it in My season'], 'Try the calendar']
+  ['ag', '/agenda', '02', 'The agenda', 'The whole year, like your own diary.', ['Each bar is an event, its length is its duration', 'Spot the busy weeks ⚡ at a glance', 'Click a bar, add it to your calendar'], 'Try the agenda'],
+  ['cal', '/#calendar', '03', 'The calendar', 'Every event, filtered your way.', ['Search a fair, a city, an organiser', 'Filter by type, country or size', 'Open any event for every detail'], 'Try the calendar']
 ];
 export function homeGuide() {
   return '<section class="gband" id="guide"><div class="wrap gd">'
     + '<div class="eyebrow reveal">Three ways to explore</div>'
-    + '<div class="reveal" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px"><h2 class="sec">One season, <em class="g">three ways to see it.</em></h2>'
+    + '<div class="reveal" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px"><h2 class="sec">One calendar, <em class="g">three ways to see it.</em></h2>'
     + '<p style="margin:0;max-width:340px;color:var(--muted);font-size:16px;line-height:1.6">Click around, zoom in, filter, save. Nothing can break, so go ahead and play.</p></div>'
     + '<div class="ways">' + CARDS.map(([k, href, n, t, d, steps, cta], i) => '<a href="' + href + '" class="way reveal" data-w="' + k + '" style="--d:' + (i * 120) + 'ms"' + (href === '/#calendar' ? ' data-act="scroll"' : '') + '>'
       + '<div class="wart">' + guideArt(k) + '</div>'
@@ -63,7 +71,6 @@ export function homeGuide() {
       + '<ol>' + steps.map((x) => '<li>' + x + '</li>').join('') + '</ol>'
       + '<span class="btn btn-navy wgo">' + cta + ' ' + ARROW + '</span></div></a>').join('') + '</div>'
     + '<div class="extras reveal">'
-    + extra('<path d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21l1.5-7L2 9.3l7-.8z"/>', 'My season', 'Save events with ★, no account needed.')
     + extra('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>', 'Sync', 'Add any event to Google, Apple or Outlook.')
     + extra('<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/>', 'Share', 'Send it on LinkedIn, WhatsApp or by link.')
     + extra('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 'Quick search', 'Press <kbd>/</kbd> anywhere to search.')
@@ -78,9 +85,9 @@ function extra(icon, t, d) {
 /* ---------- guided tour (header "?" button) ---------- */
 const TOUR = [
   ['map', 'The map', 'Fly around the watch world. Gold countries have events: click one, pick a city, and every fair there is right in front of you. Scroll to zoom, drag to move.', '/map', 'Try the map'],
-  ['ag', 'The agenda', 'The season as a diary. Each bar is an event, from its first to its last day. Busy weeks are flagged ⚡ and the colour legend shows or hides each type.', '/agenda', 'Try the agenda'],
+  ['ag', 'The agenda', 'The whole year as a diary. Each bar is an event, from its first to its last day. Busy weeks are flagged ⚡ and the colour legend shows or hides each type.', '/agenda', 'Try the agenda'],
   ['cal', 'The calendar', 'Every upcoming event in one list. Search, filter by type, country or free entry, and browse month by month.', '/#calendar', 'Try the calendar'],
-  ['event', 'Keep what you like', 'Tap ★ to save an event to My season, add it to Google, Apple or Outlook in one click, or share it with a friend.', null, null],
+  ['event', 'Keep and share', 'Add any event to Google, Apple or Outlook in one click, or share it with a friend on LinkedIn or WhatsApp.', null, null],
   ['add', 'Organising an event?', 'List it for free in about three minutes. It appears straight away in the calendar, the agenda and on the map.', '/add', 'Add your event']
 ];
 export const TOUR_LEN = TOUR.length;
@@ -107,18 +114,18 @@ const SECTIONS = [
   ], ['A softly pulsing dot means an event is happening right now.', 'City names appear once you zoom in on a country.'], ['/map', 'Open the map']],
   ['agenda', 'The agenda', 'The whole month, like your own diary.', 'ag', [
     ['Read the month', 'Each coloured bar is an event: where it starts, where it ends and how long it lasts.'],
-    ['Move through the season', 'Use the arrows or the month strip. The strip shows how busy each month is.'],
+    ['Move through the months', 'Use the arrows or the month strip. The strip shows how busy each month is.'],
     ['Focus', 'Hide or show event types with the colour legend. Click a bar to see the details on the side.']
   ], ['Weeks with four events or more are flagged ⚡ <b>Busy week</b>.', 'From the side panel, add the event to Google Calendar in one click.'], ['/agenda', 'Open the agenda']],
   ['calendar', 'The calendar', 'Every upcoming event, filtered your way.', 'cal', [
     ['Search', 'Type a fair, a city or an organiser in the search field. From any page, press <kbd>/</kbd> to search straight away.'],
-    ['Filter', 'Choose a type (trade fairs, public fairs, jewellery, vintage, auctions), a country or a size, and tick <b>Open to the public</b> or <b>Free entry</b>.'],
+    ['Filter', 'Choose a type (trade fairs, public fairs, jewellery, vintage, auctions), a country or a size.'],
     ['Browse by month', 'Swipe through the month tabs: the number shows how many events each month holds.']
-  ], ['Tap ★ on any event to keep it in <b>My season</b>, then use the ★ filter to see only your picks.'], ['/#calendar', 'Browse the calendar']],
+  ], ['Open any event to see its key facts and a link to the official website.'], ['/#calendar', 'Browse the calendar']],
   ['event', 'Event pages', 'Everything you need, and the official source.', null, [
     ['Key facts', 'Dates, duration, venue, type, number of exhibitors, who can attend and who organises it.'],
     ['Official website', 'Every event links to its organiser’s website: always check final details there.'],
-    ['Keep and share', 'Add it to Google, Apple or Outlook calendar, save it to My season, or share it on LinkedIn, WhatsApp or by link.']
+    ['Keep and share', 'Add it to Google, Apple or Outlook calendar, or share it on LinkedIn, WhatsApp or by link.']
   ], ['“Dates to be confirmed” means the organiser has announced the event but not its final dates yet.'], null],
   ['organisers', 'For organisers', 'List your event for free.', null, [
     ['Fill in the form', 'Name, dates, city, venue, type and the official website. It takes about three minutes.'],
@@ -130,11 +137,11 @@ const FAQ = [
   ['Is it free?', 'Yes, for everyone: visitors and organisers. There is no account to create.'],
   ['Where does the information come from?', 'From the organisers themselves and their official websites. Each event links to its source.'],
   ['Does it work on my phone?', 'Yes. The whole site works on phones, tablets and computers.'],
-  ['Where is My season saved?', 'On your device, in your browser. Nothing is sent to us.']
+  ['Do I need an account?', 'No. Everything is open: there is nothing to sign up for.']
 ];
 export function pageGuideBody(header, footer) {
   return '<section class="dark">' + header('guide') + '<div class="wrap" style="padding-top:72px;padding-bottom:72px"><div class="eyebrow in">How it works</div>'
-    + '<h1 class="big in d1">Your guide to <em class="g">the watch season.</em></h1>'
+    + '<h1 class="big in d1">Your guide to <em class="g">World Watch Calendar.</em></h1>'
     + '<p class="lead in d2" style="max-width:620px">Three ways to explore, a few handy extras, nothing to install and no account to create. Here is everything in two minutes.</p>'
     + '<nav class="gnav in d3" aria-label="Guide sections">' + SECTIONS.map(([id, t]) => '<a href="#' + id + '" data-act="gjump" data-v="' + id + '">' + t + '</a>').join('') + '<a href="#faq" data-act="gjump" data-v="faq">Questions</a></nav>'
     + '</div></section>'
@@ -152,7 +159,7 @@ export function pageGuideBody(header, footer) {
 function eventMock() {
   return '<div class="emock"><span class="tag" style="display:inline-flex;align-items:center;min-height:24px;padding:0 10px;border-radius:999px;background:#0F1B2D;color:#fff;font-size:10px">Trade fair</span>'
     + '<div class="serif" style="font-size:26px;margin-top:12px;line-height:1.1">Your favourite fair</div><dl class="facts"><div><dt>Dates</dt><dd>14 – 20 April</dd></div><div><dt>Venue</dt><dd>Palexpo, Geneva</dd></div><div><dt>Open to</dt><dd>Public · free entry</dd></div></dl>'
-    + '<div class="emb">Visit official website</div><div class="emb line">★ Save to My season</div><div class="emrow"><span>Google</span><span>Apple</span><span>Outlook</span></div></div>';
+    + '<div class="emb">Visit official website</div><div class="emrow"><span>Google</span><span>Apple</span><span>Outlook</span></div></div>';
 }
 function addMock() {
   return '<div class="emock"><div class="k" style="font-size:10px">Add your event</div>'
