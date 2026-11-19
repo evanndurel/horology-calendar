@@ -503,3 +503,5 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 @media (max-width:480px){.hdr{gap:8px}.sbtn,.menu{width:40px;height:40px}}
 @media (max-width:390px){.logo{font-size:18px}.hdi{gap:10px}.hdr{gap:6px}}
 @media (max-width:340px){.logo{font-size:16px}.wrap-l.hdi{padding:0 16px}}
+.tfull{display:inline-flex;align-items:center;min-height:46px;padding:0 6px;font-size:13px;letter-spacing:.06em;color:var(--muted);text-decoration:none}.tfull:hover{color:var(--ink)}
+.tinl{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--ink);text-decoration:none}

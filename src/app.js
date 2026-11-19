@@ -557,7 +557,7 @@ function openTour(i) {
   let o = document.getElementById('tour');
   if (!o) { tourFocus = document.activeElement; o = document.createElement('div'); o.id = 'tour'; o.className = 'tour'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'ttitle'); o.dataset.act = 'tbg'; document.body.appendChild(o); document.documentElement.style.overflow = 'hidden'; }
   o.innerHTML = tourHTML(TOURI);
-  const b = o.querySelector('[data-act=tnext]') || o.querySelector('[data-act=tgo]') || o.querySelector('.tx'); if (b) b.focus({ preventScroll: true });
+  const b = o.querySelector('[data-act=tnext]') || o.querySelector('.tnav [data-act=tclose]') || o.querySelector('.tx'); if (b) b.focus({ preventScroll: true });
 }
 function closeTour() {
   const o = document.getElementById('tour'); if (!o) return;

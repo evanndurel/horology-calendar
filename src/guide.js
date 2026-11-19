@@ -86,14 +86,15 @@ const TOUR = [
 export const TOUR_LEN = TOUR.length;
 export function tourHTML(i) {
   const [art, t, d, href, cta] = TOUR[i];
+  const last = i === TOUR.length - 1;
   const vis = art === 'event' ? eventMock() : art === 'add' ? addMock() : guideArt(art);
   return '<div class="tcard" role="document"><button class="tx" data-act="tclose" aria-label="Close the tour"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
     + '<div class="tvis' + (art === 'event' || art === 'add' ? ' tmock' : '') + '">' + vis + '</div>'
-    + '<div class="tbody"><div class="tstep">' + (i + 1) + ' / ' + TOUR.length + '</div><h2 id="ttitle">' + t + '</h2><p>' + d + '</p>'
+    + '<div class="tbody"><div class="tstep">' + (i + 1) + ' / ' + TOUR.length + '</div><h2 id="ttitle">' + t + '</h2><p>' + d + '</p>' + (last && href ? '<a href="' + href + '" class="ul tinl" data-act="tgo">' + cta + ' ' + ARROW + '</a>' : '')
     + '<div class="tdots" aria-hidden="true">' + TOUR.map((_, j) => '<span' + (j === i ? ' class="on"' : '') + '></span>').join('') + '</div>'
     + '<div class="tnav">' + (i > 0 ? '<button class="btn btn-line" data-act="tprev">Back</button>' : '<span></span>')
-    + '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">' + (href ? '<a href="' + href + '" class="btn btn-line" data-act="tgo">' + cta + '</a>' : '')
-    + (i < TOUR.length - 1 ? '<button class="btn btn-navy" data-act="tnext">Next ' + ARROW + '</button>' : '<a href="/guide" class="btn btn-navy" data-act="tgo">Full guide ' + ARROW + '</a>') + '</div></div>'
+    + '<div style="display:flex;gap:10px;align-items:center;justify-content:flex-end">' + (href && !last ? '<a href="' + href + '" class="btn btn-line" data-act="tgo">' + cta + '</a>' : '')
+    + (i < TOUR.length - 1 ? '<button class="btn btn-navy" data-act="tnext">Next ' + ARROW + '</button>' : '<a href="/guide" class="ul tfull" data-act="tgo">Full guide</a><button class="btn btn-navy" data-act="tclose">Got it, thanks</button>') + '</div></div>'
     + '</div></div>';
 }
 
