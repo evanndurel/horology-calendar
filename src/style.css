@@ -199,7 +199,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:26px
 .stat{padding:44px 24px 48px;border-right:1px solid var(--line-d)}
 .stat:first-child{padding-left:0}
 .stat:last-child{border-right:0}
-.stat .n{font-family:var(--serif);font-size:64px;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat .n{font-family:var(--serif);font-size:64px;line-height:1;color:var(--gold);font-variant-numeric:proportional-nums;letter-spacing:-.01em}
 .stat .l{margin-top:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-d)}
 @media (max-width:760px){.statsg{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{padding:28px 16px 32px;border-bottom:1px solid var(--line-d)}.stat:nth-child(2n){border-right:0}.stat:nth-child(2n+1){padding-left:0}.stat .n{font-size:48px}.herogrid{padding:56px 24px}}
 /* map teaser */
