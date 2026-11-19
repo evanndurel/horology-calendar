@@ -580,3 +580,10 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 .pwin img{display:block;border-radius:0!important;box-shadow:none!important;transform:scale(1.14);will-change:transform}
 .glmap.dive canvas{animation:dive 1.9s cubic-bezier(.16,.84,.3,1) both;transform-origin:52% 46%}
 @keyframes dive{from{transform:scale(.42);opacity:0;filter:blur(3px)}35%{opacity:1}to{transform:none;opacity:1;filter:none}}
+/* footer on a navy page (map) */
+.dark .ft{border-top-color:var(--line-d)}
+.dark .ft nav a{color:#E6E9EE}
+.dark .ft nav a:hover{color:var(--gold)}
+.dark .ft .k{color:var(--muted-d2)}
+.dark .ft p{color:var(--muted-d)!important}
+.dark .ftb{border-top-color:var(--line-d);color:var(--muted-d2)}
