@@ -120,7 +120,7 @@ function miniMap() {
   return '<svg viewBox="150 50 720 250" style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true"><path d="' + D.map.base + '" fill="#152338" stroke="#26364E" stroke-width="0.6" vector-effect="non-scaling-stroke"/>' + hi + pins + '</svg>' + (pulses ? '<svg viewBox="150 50 720 250" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" aria-hidden="true">' + pulses + '</svg>' : '');
 }
 function pageHome() {
-  const up = upcoming(); const next = up[0]; const cdE = heroCD();
+  const up = upcoming(); const next = up[0];
   const countries = new Set(up.map((e) => e.country)).size;
   const hl = ['watches-and-wonders-geneva-2027-2027-04', 'time-on-show-paris-2027-2027-02', 'inhorgenta-munich-2027-2027-02'].map((id) => byId[id]).filter(Boolean);
   const months = [...new Set(up.map((e) => e.s.slice(0, 7)))];
@@ -131,7 +131,6 @@ function pageHome() {
     + '<p class="lead in d2">Trade fairs, collector shows, auctions and watch weeks around the world, each linked to its official source. Free and open to everyone.</p>'
     + '<div class="in d3" style="margin-top:40px;display:flex;flex-wrap:wrap;gap:14px"><a href="/#calendar" class="btn btn-gold" data-act="scroll">Browse the calendar ' + ARR + '</a><a href="/add" class="btn btn-ghost">Add your event</a></div>'
     + (next ? '<div class="in d4"><a class="nextup" href="/event/' + next.id + '"><span class="dot"></span><span>Next up · <b>' + esc(next.n) + '</b> · ' + whenOf(next).replace('Starts in', 'in').toLowerCase() + '</span></a></div>' : '')
-    + (cdE ? '<a class="hcd in d4" href="/event/' + cdE.id + '"><span class="hcdl">' + esc(cdE.n) + ' opens in</span><span class="hcdr" id="hcd" data-start="' + cdE.s + '">' + [['d', 'days'], ['h', 'hrs'], ['m', 'min'], ['s', 'sec']].map(([k, l]) => '<span class="hcu"><b data-u="' + k + '"></b><i>' + l + '</i></span>').join('<span class="hcs">:</span>') + '</span></a>' : '')
     + '</div><div class="dial in d2 big">' + heroArt() + '</div></div>'
     + '<div class="stats"><div class="wrap statsg">'
     + '<div class="stat reveal" style="--d:0ms"><div class="n" data-count="' + up.length + '">' + up.length + '</div><div class="l">Upcoming events</div></div>'
@@ -189,12 +188,12 @@ function renderList() {
   box.innerHTML = Object.keys(groups).map((m) => '<section class="month reveal"><div class="mhead"><h3 class="serif" style="margin:0;font-size:34px">' + ML[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + '</h3><span class="k">' + groups[m].length + (groups[m].length === 1 ? ' event' : ' events') + '</span></div>'
     + groups[m].map((e, i) => { const x = dm(e.s, e.e); const on = !!saved[e.id];
       return '<div class="row reveal" style="--d:' + Math.min(i, 8) * 70 + 'ms"><a class="rowa" href="/event/' + e.id + '"><div class="date"><div class="d">' + x.days + '</div><div class="m">' + x.mon + '</div></div>'
-        + '<div style="flex:999 1 300px;min-width:0"><div style="font-size:18px;font-weight:600">' + esc(e.n) + '</div><div style="margin-top:6px;font-size:14px;color:var(--muted)">' + esc(place(e)) + '</div></div>'
-        + '<div style="flex:1 1 190px;display:flex;flex-direction:column;gap:6px"><span class="tag" style="color:#3A414D">' + esc(e.tl) + '</span>'
+        + '<div class="rn" style="flex:999 1 300px;min-width:0"><div style="font-size:18px;font-weight:600">' + esc(e.n) + '</div><div style="margin-top:6px;font-size:14px;color:var(--muted)">' + esc(place(e)) + '</div></div>'
+        + '<div class="rt" style="flex:1 1 190px;display:flex;flex-direction:column;gap:6px"><span class="tag" style="color:#3A414D">' + esc(e.tl) + '</span>'
         + (e.tbc ? '<span class="tag" style="color:#8A3F06">Dates to be confirmed</span>' : '')
         + (live(e) ? '<span class="tag" style="display:inline-flex;align-items:center;gap:8px;color:#7A5A1E"><span class="dot" style="width:7px;height:7px;background:#B8975A"></span>Happening now</span>' : '')
         + (e.free ? '<span class="tag" style="color:#2F6B4F">Free entry</span>' : '') + (e.closed ? '<span class="tag" style="color:var(--muted)">Trade / invitation only</span>' : '') + '</div>'
-        + '<div style="flex:0 0 140px;font-size:14px;color:var(--muted)">' + esc(e.exh || '—') + '</div>' + ARR + '</a>'
+        + '<div class="rex' + (e.exh ? '' : ' none') + '" style="flex:0 0 140px;font-size:14px;color:var(--muted)">' + esc(e.exh || '—') + '</div>' + ARR + '</a>'
         + '<button class="star" data-act="star" data-id="' + e.id + '" aria-pressed="' + on + '" aria-label="' + (on ? 'Remove from' : 'Save to') + ' My season" title="' + (on ? 'Remove from' : 'Save to') + ' My season">' + STAR(on) + '</button></div>'; }).join('') + '</section>').join('') + mnav;
   observe();
 }
@@ -299,7 +298,7 @@ function renderAgenda() {
       const cl = T(e.s) < ws, cr = T(e.e) > we; const isS = e.id === A.sel;
       return '<button class="ebar" data-act="agsel" data-id="' + e.id + '" title="' + esc(e.n + ', ' + range(e.s, e.e)) + '" style="grid-column:' + col + ' / span ' + span + ';grid-row:' + (lane + 1) + ';margin:0 ' + (cr ? 0 : 4) + 'px 0 ' + (cl ? 0 : 4) + 'px;border-radius:' + (cl ? 0 : 6) + 'px ' + (cr ? 0 : 6) + 'px ' + (cr ? 0 : 6) + 'px ' + (cl ? 0 : 6) + 'px;background:' + c[1] + ';color:' + c[2] + ';animation-delay:' + n * 40 + 'ms;box-shadow:' + (isS ? '0 0 0 2px #fff,0 0 0 4px #B8975A' : c[3]) + (e.tbc ? ';background-image:repeating-linear-gradient(135deg,transparent 0 8px,rgba(255,255,255,.18) 8px 12px)' : '') + '">' + (cl ? '← ' : '') + esc(e.n) + '</button>';
     }).join('');
-    weeks += '<div class="wk">' + (lst.length >= 4 ? '<span class="busy"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Busy week · ' + lst.length + ' events</span>' : '') + '<div class="wkbg" aria-hidden="true">' + bg + '</div><div class="wkfg" style="min-height:' + Math.max(130, 60 + laneEnd.length * 35) + 'px">' + bars + '</div></div>';
+    weeks += '<div class="wk">' + (lst.length >= 4 ? '<span class="busy"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Busy week · ' + lst.length + ' events</span>' : '') + '<div class="wkbg" aria-hidden="true">' + bg + '</div><div class="wkfg" style="--mh:' + Math.max(130, 60 + laneEnd.length * 35) + 'px;--mhm:' + Math.max(64, 40 + laneEnd.length * 23) + 'px">' + bars + '</div></div>';
     ws += 7 * DAY;
   }
   const se = byId[A.sel];
