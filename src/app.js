@@ -141,7 +141,7 @@ function pageHome() {
     + '<section class="dark" style="border-top:1px solid var(--line-d)"><div class="wrap" style="padding-top:96px;padding-bottom:104px"><div class="eyebrow reveal">Explore by country</div>'
     + '<div class="reveal" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px"><h2 class="sec">Where the watch world <em class="g">meets.</em></h2><a href="/map" class="ul" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)">Open the world map</a></div>'
     + '<a href="/map" class="mapcard reveal z" style="margin-top:44px" aria-label="Open the interactive world map">' + miniMap() + '<span class="btn btn-gold cta" style="min-height:42px;padding:0 18px;font-size:12px;letter-spacing:.14em;text-transform:uppercase">Explore the map ' + ARR + '</span></a></div></section>'
-    + '<section class="wrap" style="padding-top:112px"><div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px"><div><div class="eyebrow reveal">Highlights</div><h2 class="sec reveal">The season’s key dates</h2></div><a href="/#calendar" data-act="scroll" class="ul" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase">See all events</a></div>'
+    + '<section class="wrap hl" style="padding-top:112px"><div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px"><div><div class="eyebrow reveal">Highlights</div><h2 class="sec reveal">The season’s key dates</h2></div><a href="/#calendar" data-act="scroll" class="ul" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase">See all events</a></div>'
     + '<div class="cards">' + hl.map((e, i) => { const x = dm(e.s, e.e); return '<a href="/event/' + e.id + '" class="card reveal" style="--d:' + i * 140 + 'ms"><div class="k">' + esc(e.tl) + ' · ' + esc(e.city) + '</div><div class="serif" style="margin-top:28px;font-size:56px;line-height:1">' + x.days + '</div><div class="k" style="margin-top:6px;font-size:14px">' + ML[+e.s.slice(5, 7) - 1] + ' ' + e.s.slice(0, 4) + '</div><div style="margin-top:auto;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:16px"><span style="font-size:19px;font-weight:600;line-height:1.35;padding-top:20px">' + esc(e.n) + '</span>' + ARR + '</div></a>'; }).join('') + '</div></section>'
     + '<section class="wrap" id="calendar" style="padding-top:120px;padding-bottom:120px;scroll-margin-top:20px"><div class="eyebrow reveal">Calendar</div>'
     + '<div style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px"><h2 class="sec reveal">Upcoming events</h2><div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px"><p id="count" style="margin:0;font-size:14px;color:var(--muted)"></p><a href="/agenda" class="btn btn-line" style="min-height:44px;padding:0 20px;font-size:13px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda view</a></div></div>'
@@ -570,16 +570,7 @@ document.addEventListener('keydown', (ev) => {
   else if (ev.key === 'ArrowRight') { ev.preventDefault(); openTour(TOURI + 1); }
   else if (ev.key === 'ArrowLeft') { ev.preventDefault(); openTour(TOURI - 1); }
 }, true);
-// First visit: a small bubble under the "?" button so people know the tour exists.
-function tipSeen() { try { localStorage.setItem('wwc-tip', '1'); } catch (x) {} document.querySelectorAll('.ttip').forEach((n) => n.remove()); }
-function showTourTip() {
-  let seen = false; try { seen = localStorage.getItem('wwc-tip') === '1'; } catch (x) {}
-  if (seen || !introDone || document.querySelector('.ttip')) return;
-  const b = document.querySelector('.tourb'); if (!b || !b.offsetParent) return;
-  const tip = document.createElement('div'); tip.className = 'ttip'; tip.setAttribute('role', 'note');
-  tip.innerHTML = '<button data-act="tour" class="ttg">New here? <b>Take the 30-second tour</b></button><button class="ttx" data-act="tipx" aria-label="Dismiss">×</button>';
-  b.parentNode.style.position = 'relative'; b.parentNode.appendChild(tip);
-}
+function tipSeen() {}
 
 /* ---------------- ADMIN ---------------- */
 const ADMF = { q: '', f: 'all' };
@@ -809,7 +800,7 @@ function route() {
   else if (p === '/') { app.innerHTML = pageHome(); heroStart(); renderList(); setMeta(H + ' · The international watch fair calendar', 'The free, open calendar of watch fairs and events worldwide: trade fairs, collector shows, auctions and watch weeks, each linked to its official source.'); countUp(); }
   else { app.innerHTML = pageNotFound(); setMeta('Page not found · ' + H); }
   if (!firstLoad) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  tickClock(); observe(); setTimeout(showTourTip, firstLoad ? 1800 : 600);
+  tickClock(); observe();
   firstLoad = false;
   if (location.hash === '#calendar') { const c = document.getElementById('calendar'); if (c) setTimeout(() => c.scrollIntoView({ behavior: 'smooth' }), 60); }
 }
@@ -847,7 +838,6 @@ document.addEventListener('click', (ev) => {
   if (a === 'tprev') { openTour(TOURI - 1); return; }
   if (a === 'tclose' || a === 'tbg') { if (a === 'tbg' && ev.target !== t) return; closeTour(); return; }
   if (a === 'tgo') { ev.preventDefault(); closeTour(); const h = t.getAttribute('href'); if (h === '/#calendar' && location.pathname === '/') { const c = document.getElementById('calendar'); if (c) c.scrollIntoView({ behavior: 'smooth' }); } else go(h); return; }
-  if (a === 'tipx') { tipSeen(); return; }
   if (a === 'gjump') { ev.preventDefault(); const c = document.getElementById(v); if (c) { c.scrollIntoView({ behavior: 'smooth' }); history.replaceState({}, '', '#' + v); } return; }
   if (a === 'scroll') { ev.preventDefault(); const c = document.getElementById('calendar'); if (c) c.scrollIntoView({ behavior: 'smooth' }); return; }
   if (a === 'type') { F.type = v; F.autoMonth = true; renderList(); return; }
@@ -909,7 +899,7 @@ async function boot() {
   route();
   // After the name: a quick "hello" in the languages of the watch world, then the site appears.
   let closed = false;
-  const close = () => { if (closed) return; closed = true; l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); setTimeout(showTourTip, 1200); };
+  const close = () => { if (closed) return; closed = true; l.classList.add('out'); document.documentElement.classList.remove('intro'); introDone = true; setTimeout(() => l.remove(), 800); };
   l.addEventListener('click', close);
   setTimeout(() => {
     if (closed) return;

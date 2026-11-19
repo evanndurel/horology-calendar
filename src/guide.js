@@ -53,7 +53,7 @@ const CARDS = [
   ['cal', '/#calendar', '03', 'The calendar', 'Every event, filtered your way.', ['Search a fair, a city, an organiser', 'Filter by type, country, free entry', 'Tap ★ to keep it in My season'], 'Try the calendar']
 ];
 export function homeGuide() {
-  return '<section class="wrap gd" id="guide" style="padding-top:112px;padding-bottom:24px;scroll-margin-top:20px">'
+  return '<section class="gband" id="guide"><div class="wrap gd">'
     + '<div class="eyebrow reveal">Three ways to explore</div>'
     + '<div class="reveal" style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px"><h2 class="sec">One season, <em class="g">three ways to see it.</em></h2>'
     + '<p style="margin:0;max-width:340px;color:var(--muted);font-size:16px;line-height:1.6">Click around, zoom in, filter, save. Nothing can break, so go ahead and play.</p></div>'
@@ -69,7 +69,7 @@ export function homeGuide() {
     + extra('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 'Quick search', 'Press <kbd>/</kbd> anywhere to search.')
     + '</div>'
     + '<div class="reveal gcta"><span>New here? Let us show you around.</span><button class="btn btn-gold" data-act="tour">Take the 30-second tour ' + ARROW + '</button></div>'
-    + '</section>';
+    + '</div></section>';
 }
 function extra(icon, t, d) {
   return '<div class="xtra"><span class="xi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icon + '</svg></span><div><b>' + t + '</b><span>' + d + '</span></div></div>';
