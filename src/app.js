@@ -783,8 +783,10 @@ function countUp() {
   const els = [...document.querySelectorAll('[data-count]')]; if (!els.length) return;
   els.forEach((el) => { el.innerHTML = reels(el.dataset.count, 0); });
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const run = () => { let k = 0; els.forEach((el) => el.querySelectorAll('.rli').forEach((x) => { x.style.transitionDelay = (k++ * 110) + 'ms'; x.classList.add('slow'); x.style.setProperty('--n', x.dataset.v); })); };
-  if (reduce) { run(); return; }
+  // once the reels have stopped, swap them for plain text so the digits sit with their natural spacing (a "1" is narrower than a "0")
+  const settle = () => els.forEach((el) => { el.textContent = el.dataset.count; });
+  const run = () => { let k = 0; els.forEach((el) => el.querySelectorAll('.rli').forEach((x) => { x.style.transitionDelay = (k++ * 110) + 'ms'; x.classList.add('slow'); x.style.setProperty('--n', x.dataset.v); })); setTimeout(settle, 1900 + k * 110 + 150); };
+  if (reduce) { settle(); return; }
   const go = () => { if (!introDone) { setTimeout(go, 200); return; } setTimeout(run, 250); };
   const box = els[0].closest('.stats') || els[0];
   if (!('IntersectionObserver' in window)) { go(); return; }
