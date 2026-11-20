@@ -43,7 +43,11 @@ function setEvents(rows) {
   rows.forEach((r) => { const e = fromRow(r); EV.push(e); if (e.lat != null && e.lon != null && !CITYLL[e.city]) CITYLL[e.city] = [e.lon, e.lat]; byId[e.id] = e; if (e.cc && !CN[e.cc]) CN[e.cc] = e.country; });
   EV.forEach((e) => { if (e.lat != null && e.lon != null && !PINS[e.city]) { const [x, y] = PROJ([e.lon, e.lat]); PINS[e.city] = [+x.toFixed(1), +y.toFixed(1), e.cc]; } });
 }
-async function loadEvents() { setEvents(await api.listEvents()); }
+async function loadEvents() { setEvents(withLocal(await api.listEvents())); }
+// Prototype: events created or edited by signed-in organisers live in this browser and are merged on top of the shared list.
+function orgData() { try { return Object.assign({ rows: {}, edits: {} }, JSON.parse(localStorage.getItem('wwc-org-data') || '{}')); } catch (x) { return { rows: {}, edits: {} }; } }
+function saveOrg(d) { try { localStorage.setItem('wwc-org-data', JSON.stringify(d)); return true; } catch (x) { toast('This prototype stores photos in your browser and it is full: try smaller images.'); return false; } }
+function withLocal(rows) { const L = orgData(); const out = rows.map((r) => (L.edits[r.id] ? Object.assign({}, r, L.edits[r.id]) : r)); Object.values(L.rows).forEach((r) => { if (!out.some((x) => x.id === r.id)) out.push(r); }); return out; }
 async function geocode(city, country) {
   try {
     const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 5000);
@@ -228,7 +232,7 @@ function pageEvent(id) {
     + '<aside aria-label="Key facts" class="reveal r" style="--d:150ms;"flex:1 1 340px;border:1px solid var(--line);border-radius:4px;padding:36px"><div class="k">Key facts</div><dl class="facts">'
     + '<div><dt>Dates</dt><dd>' + range(e.s, e.e) + '</dd></div><div><dt>Duration</dt><dd>' + dur(e) + '</dd></div><div><dt>Venue</dt><dd>' + esc(e.venue || '—') + '</dd></div><div><dt>City</dt><dd>' + esc(e.city + ', ' + e.country) + '</dd></div><div><dt>Type</dt><dd>' + esc(e.tl) + '</dd></div><div><dt>Exhibitors</dt><dd>' + esc(e.exh || '—') + '</dd></div><div><dt>Open to</dt><dd>' + (e.closed ? 'Trade / invitation' : 'Public') + (e.free ? ' · free entry' : '') + '</dd></div><div><dt>Organiser</dt><dd>' + esc(e.org || '—') + '</dd></div></dl>'
     + (e.site ? '<a href="' + esc(e.site) + '" target="_blank" rel="noopener" class="btn btn-navy" style="margin-top:28px;width:100%;justify-content:center">Visit official website <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>' : '')
-    + saveBtn(e.id, true)
+    + saveBtn(e.id, true) + manageLink(e.id)
     + '<div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line)"><div class="k" style="font-size:11px">Add to my calendar</div><div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><a class="act" target="_blank" rel="noopener" href="' + esc(gcal(e)) + '">Google</a><button class="act" data-act="ics" data-id="' + e.id + '">Apple</button><a class="act" target="_blank" rel="noopener" href="' + esc(outlook(e)) + '">Outlook</a></div></div>'
     + '<div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line)"><div class="k" style="font-size:11px">Share</div><div style="margin-top:12px;display:flex;gap:8px">'
     + '<a class="act round" target="_blank" rel="noopener" aria-label="Share on LinkedIn" href="https://www.linkedin.com/sharing/share-offsite/?url=' + shareUrl + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/></svg></a>'
@@ -471,13 +475,15 @@ async function saveSub(f) {
     type: ty[0], type_label: ty[1], exhibitors: f.exh.value ? f.exh.value + ' exhibitors' : null, trade_only: aud === 0, free_entry: f.free.checked,
     website: f.site.value.trim(), organiser: f.org.value.trim(), description: f.desc.value.trim() || null, press_days: f.press.value.trim() || null,
     lat: pos ? pos.lat : null, lon: pos ? pos.lon : null };
-  await api.addEvent(row, f.email.value.trim());
+  if (USER) { Object.assign(row, { source: 'organiser', submitted_at: today() }); const L = orgData(); L.rows[row.id] = row; saveOrg(L); USER.owned = (USER.owned || []).concat(row.id); storeUser(); }
+  else await api.addEvent(row, f.email.value.trim());
   await loadEvents();
   return byId[row.id] || fromRow(row);
 }
 function addDone(ev0) {
   const name = ev0.n;
   document.getElementById('addroot').innerHTML = '<div class="in" style="padding:72px 40px;border:1px solid var(--line);border-radius:4px;text-align:center"><svg width="72" height="72" viewBox="0 0 64 64" fill="none" aria-hidden="true" style="margin:0 auto"><circle class="ck-c" cx="32" cy="32" r="28" stroke="#B8975A" stroke-width="1.5"/><path class="ck-p" d="M21 33l7.5 7.5L44 25" stroke="#0F1B2D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><h2 class="serif in d3" style="margin:28px 0 0;font-size:48px">Thank you</h2><p class="in d4" style="margin:14px auto 0;font-size:16px;line-height:1.65;color:var(--muted);max-width:460px">“' + esc(name) + '” is now live in the calendar. Our team reviews every new listing and may contact you if something needs checking.</p><div style="margin-top:36px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px">' + (ev0.id ? '<a href="/event/' + ev0.id + '" class="btn btn-navy">See your listing ' + ARR + '</a>' : '') + '<a href="/add" data-act="reload" class="btn btn-line">Add another event</a></div></div>';
+  if (USER && isOwner(ev0.id)) { const r = document.getElementById('addroot').firstElementChild; if (r) r.insertAdjacentHTML('beforeend', '<div style="margin-top:28px"><a href="/account/event/' + ev0.id + '" class="btn btn-navy">Add photos and details ' + ARR + '</a></div>'); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -598,7 +604,7 @@ function storeUser() {
   try { if (USER) { const u = users(); u[USER.email] = USER; localStorage.setItem('wwc-users', JSON.stringify(u)); localStorage.setItem('wwc-user', USER.email); } else localStorage.removeItem('wwc-user'); } catch (x) {}
   renderMe();
 }
-function initials() { return USER ? (USER.name || USER.email).trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() : ''; }
+function initials() { return USER ? ((USER.name || USER.email).trim()[0] + ((USER.last || '').trim()[0] || '')).toUpperCase() : ''; }
 function meInner() { return USER ? '<span class="mei">' + esc(initials()) + '</span>' : PERSON; }
 function renderMe() {
   const b = document.getElementById('meb'); if (b) { b.innerHTML = meInner(); b.title = b.ariaLabel = USER ? 'Your account' : 'Sign in'; b.classList.toggle('in', !!USER); }
@@ -647,7 +653,7 @@ function authSigned() {
   if (known && known.name) { USER = known; finishLogin('Welcome back, ' + (USER.name.split(' ')[0]) + '.'); return; }
   const cs = [...new Set(upcoming().map((e) => e.cc))].map((c) => [c, CN[c]]).concat([['CH', CN.CH], ['FR', CN.FR]]).filter((x, i, a) => x[1] && a.findIndex((y) => y[0] === x[0]) === i).sort((a, b) => a[1].localeCompare(b[1]));
   document.querySelector('#auth .abody').innerHTML = '<div class="tstep">One last step</div><h2 id="atitle">Tell us <em>about you.</em></h2><p>So we can suggest the events that matter to you.</p>'
-    + '<label class="alab" for="au-name">First name</label><input class="ain" id="au-name" autocomplete="given-name" placeholder="Evann">'
+    + '<div class="a2"><div><label class="alab" for="au-name">First name</label><input class="ain" id="au-name" autocomplete="given-name"></div><div><label class="alab" for="au-last">Last name</label><input class="ain" id="au-last" autocomplete="family-name"></div></div>'
     + '<div class="alab">I am a…</div><div class="achips">' + ROLES.map(([k, l]) => '<button class="achip" data-act="arole" data-v="' + k + '">' + l + '</button>').join('') + '</div>'
     + '<label class="alab" for="au-cc">Country</label><select class="ain" id="au-cc"><option value="">Choose…</option>' + cs.map(([c, n]) => '<option value="' + c + '">' + esc(n) + '</option>').join('') + '<option value="other">Other</option></select>'
     + '<div class="alab">I’m interested in</div><div class="achips">' + Object.entries(TY).map(([k, v]) => '<button class="achip" data-act="aint" data-v="' + k + '">' + v[0] + '</button>').join('') + '</div>'
@@ -658,7 +664,7 @@ function authSigned() {
 function authFinish() {
   const name = document.getElementById('au-name').value.trim(); const role = (document.querySelector('[data-act=arole].on') || {}).dataset;
   if (!name) { document.getElementById('aerr').textContent = 'Add your first name to continue.'; document.getElementById('au-name').focus(); return; }
-  USER = { email: AUTHMAIL, name, role: role ? role.v : '', cc: document.getElementById('au-cc').value, interests: [...document.querySelectorAll('[data-act=aint].on')].map((b) => b.dataset.v), news: document.getElementById('au-news').checked, saved: [], since: today() };
+  USER = { email: AUTHMAIL, name, last: document.getElementById('au-last').value.trim(), owned: [], role: role ? role.v : '', cc: document.getElementById('au-cc').value, interests: [...document.querySelectorAll('[data-act=aint].on')].map((b) => b.dataset.v), news: document.getElementById('au-news').checked, saved: [], since: today() };
   finishLogin('Welcome, ' + name.split(' ')[0] + '.');
 }
 function finishLogin(msg) {
@@ -675,37 +681,144 @@ function accRow(e, saved) {
   const x = dm(e.s, e.e);
   return '<div class="arow"><a href="/event/' + e.id + '" class="arowa"><span class="ard"><span class="serif">' + x.days + '</span><span>' + x.mon + ' ' + e.s.slice(0, 4) + '</span></span><span class="arn"><b>' + esc(e.n) + '</b><span>' + esc(e.city) + ' · ' + esc(e.tl) + '</span></span></a>' + saveBtn(e.id) + '</div>';
 }
+const isOwner = (id) => !!(USER && (USER.owned || []).includes(id));
+function manageLink(id) {
+  if (!USER) return '';
+  return isOwner(id) ? '<a href="/account/event/' + id + '" class="btn btn-gold" style="margin-top:12px;width:100%;justify-content:center">Manage this listing ' + ARR + '</a>'
+    : '<button class="alnk" data-act="claim" data-id="' + id + '" style="display:block;margin:16px auto 0;font-size:13px;color:var(--muted)">Are you the organiser? Manage this listing</button>';
+}
+function completion(e) {
+  const c = [['A cover photo', !!e.img], ['At least two more photos', (e.gal || []).length >= 2], ['A description of 120+ characters', (e.desc || '').length >= 120], ['The venue', !!e.venue], ['Number of exhibitors', !!e.exh], ['Press or trade days', !!e.press], ['Official website', !!e.site], ['Organiser name', !!e.org]];
+  return { pct: Math.round(c.filter((x) => x[1]).length / c.length * 100), todo: c.filter((x) => !x[1]).map((x) => x[0]) };
+}
+let ACM = 0; // month offset of "My calendar"
+function myCalendar(list) {
+  const base = new Date(); base.setDate(1); base.setMonth(base.getMonth() + ACM);
+  const y = base.getFullYear(), m = base.getMonth(); const first = (new Date(y, m, 1).getDay() + 6) % 7; const n = new Date(y, m + 1, 0).getDate();
+  const iso = (d) => y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  let cells = ''; for (let k = 0; k < first; k++) cells += '<div class="mcd off"></div>';
+  for (let d = 1; d <= n; d++) {
+    const ds = iso(d); const on = list.filter((e) => e.s <= ds && e.e >= ds);
+    cells += '<div class="mcd' + (ds === today() ? ' tdy' : '') + (on.length ? ' has' : '') + '"><span class="mcn">' + d + '</span>' + on.slice(0, 2).map((e) => '<a href="/event/' + e.id + '" class="mce" style="background:' + TY[e.t][1] + ';color:' + TY[e.t][2] + '" title="' + esc(e.n) + '">' + (e.s === ds || d === 1 ? esc(e.n) : '&nbsp;') + '</a>').join('') + (on.length > 2 ? '<span class="mcm">+' + (on.length - 2) + '</span>' : '') + '</div>';
+  }
+  return '<div class="mcal"><div class="mch"><button class="sbtn mcb" data-act="acm" data-v="-1" aria-label="Previous month">‹</button><b>' + ML[m] + ' ' + y + '</b><button class="sbtn mcb" data-act="acm" data-v="1" aria-label="Next month">›</button></div>'
+    + '<div class="mcg">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((w) => '<div class="mcw">' + w + '</div>').join('') + cells + '</div></div>';
+}
 function pageAccount() {
   if (!USER) {
-    return '<section class="dark">' + header('account') + '<div class="wrap" style="padding-top:88px;padding-bottom:96px"><div class="eyebrow in">Your account</div><h1 class="big in d1">Your watch world, <em class="g">saved.</em></h1><p class="lead in d2" style="max-width:560px">Save events, build your own agenda and get reminders before the fairs you care about. Free, no password.</p><button class="btn btn-gold in d3" data-act="me" style="margin-top:36px">Sign in or create an account</button></div></section>' + footer(false);
+    return '<section class="dark">' + header('account') + '<div class="wrap" style="padding-top:88px;padding-bottom:96px"><div class="eyebrow in">Your account</div><h1 class="big in d1">Your watch world, <em class="g">saved.</em></h1><p class="lead in d2" style="max-width:560px">Save events, build your own agenda and manage the events you organise. Free, no password.</p><button class="btn btn-gold in d3" data-act="me" style="margin-top:36px">Sign in or create an account</button></div></section>' + footer(false);
   }
   const mine = mySaved(); const rec = recommend(); const role = (ROLES.find((r) => r[0] === USER.role) || [, ''])[1];
+  const owned = (USER.owned || []).map((id) => byId[id]).filter(Boolean);
+  const org = USER.role === 'organiser' || owned.length;
   const next = mine[0]; const days = next ? Math.max(0, Math.ceil((T(next.s) - Date.now()) / DAY)) : 0;
   return '<section class="dark">' + header('account') + '<div class="wrap" style="padding-top:80px;padding-bottom:72px"><div class="eyebrow in">Your account</div>'
-    + '<div class="in d1" style="display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin-top:6px"><span class="abig" aria-hidden="true">' + esc(initials()) + '</span><h1 class="big" style="margin:0">Hello, <em class="g">' + esc(USER.name.split(' ')[0]) + '.</em></h1></div>'
+    + '<div class="in d1" style="display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin-top:6px"><span class="abig" aria-hidden="true">' + esc(initials()) + '</span><h1 class="big" style="margin:0">Hello, <em class="g">' + esc(USER.name) + '.</em></h1></div>'
     + '<p class="lead in d2" style="margin-top:18px">' + [role, USER.cc && CN[USER.cc], 'member since ' + range(USER.since, USER.since)].filter(Boolean).map(esc).join(' · ') + '</p>'
-    + '<div class="astats in d3"><div><b>' + mine.length + '</b><span>saved events</span></div><div><b>' + (next ? days : '–') + '</b><span>' + (next ? 'days to ' + esc(next.n) : 'no event saved yet') + '</span></div><div><b>' + new Set(mine.map((e) => e.cc)).size + '</b><span>countries</span></div></div>'
+    + '<div class="astats in d3"><div><b>' + mine.length + '</b><span>saved events</span></div><div><b>' + (next ? days : '–') + '</b><span>' + (next ? 'days to ' + esc(next.n) : 'no event saved yet') + '</span></div>' + (org ? '<div><b>' + owned.length + '</b><span>events you manage</span></div>' : '<div><b>' + new Set(mine.map((e) => e.cc)).size + '</b><span>countries</span></div>') + '</div>'
+    + '<nav class="anav in d3" aria-label="Account sections"><a href="#mycal" data-act="gjump" data-v="mycal">My calendar</a>' + (org ? '<a href="#myevents" data-act="gjump" data-v="myevents">My events</a>' : '') + '<a href="#profile" data-act="gjump" data-v="profile">Profile</a></nav>'
     + '</div></section>'
-    + '<main class="wrap apage"><div class="aproto aproto-l">Prototype · your account is simulated in this browser. The live version will use secure email sign-in.</div>'
-    + '<section class="asec reveal"><div class="ahd"><div><div class="eyebrow">My agenda</div><h2 class="sec">Your upcoming events</h2></div>' + (mine.length ? '<button class="btn btn-line" data-act="icsall">Add all to my calendar</button>' : '') + '</div>'
-    + (mine.length ? '<div class="alist">' + mine.map((e) => accRow(e, true)).join('') + '</div>' : '<div class="aempty"><p class="serif">Nothing saved yet.</p><p>Tap ★ on any event to keep it here, then add them all to your calendar in one click.</p><a href="/#calendar" class="btn btn-navy">Browse events ' + ARR + '</a></div>')
+    + '<main class="wrap apage"><div class="aproto aproto-l">Prototype · your account and your edits are simulated in this browser. The live version will use secure email sign-in and save to the database.</div>'
+    // calendar of saved events
+    + '<section class="asec reveal" id="mycal"><div class="ahd"><div><div class="eyebrow">My calendar</div><h2 class="sec">Your saved events</h2></div>' + (mine.length ? '<button class="btn btn-line" data-act="icsall">Add all to my calendar app</button>' : '') + '</div>'
+    + (mine.length ? '<div class="acal"><div id="mycalg">' + myCalendar(mine) + '</div><div class="alist acol">' + mine.map((e) => accRow(e)).join('') + '</div></div>'
+      : '<div class="aempty"><p class="serif">Nothing saved yet.</p><p>Tap ★ on any event: it appears here, in your own calendar, and you can add them all to Google, Apple or Outlook in one click.</p><a href="/#calendar" class="btn btn-navy">Browse events ' + ARR + '</a></div>')
     + '</section>'
-    + (rec.length ? '<section class="asec reveal"><div class="ahd"><div><div class="eyebrow">Picked for you</div><h2 class="sec">You might like</h2></div></div><div class="alist">' + rec.map((e) => accRow(e, false)).join('') + '</div></section>' : '')
-    + '<section class="asec reveal"><div class="ahd"><div><div class="eyebrow">Profile</div><h2 class="sec">Your details</h2></div></div><div class="aform">'
-    + '<label class="alab" for="pf-name">First name</label><input class="ain" id="pf-name" value="' + esc(USER.name) + '">'
-    + '<label class="alab" for="pf-mail">Email</label><input class="ain" id="pf-mail" value="' + esc(USER.email) + '" disabled>'
+    // organiser space
+    + (org ? '<section class="asec reveal" id="myevents"><div class="ahd"><div><div class="eyebrow">My events</div><h2 class="sec">Events you organise</h2></div><a href="/add" class="btn btn-navy">Add a new event ' + ARR + '</a></div>'
+      + (owned.length ? '<div class="ocards">' + owned.map((e) => { const c = completion(e); const x = dm(e.s, e.e); return '<article class="ocard"><a href="/account/event/' + e.id + '" class="ocov"' + (e.img ? ' style="background-image:url(' + JSON.stringify(e.img).slice(1, -1).replace(/"/g, '%22') + ')"' : '') + '>' + (e.img ? '' : '<span>Add a cover photo</span>') + '<i class="ost' + (e.hidden ? ' off' : '') + '">' + (e.hidden ? 'Hidden' : 'Published') + '</i></a><div class="obody"><div class="k" style="font-size:10px">' + esc(e.tl) + ' · ' + esc(e.city) + '</div><h3>' + esc(e.n) + '</h3><p>' + x.days + ' ' + x.mon + ' ' + e.s.slice(0, 4) + '</p><div class="omtr" title="Listing ' + c.pct + '% complete"><span style="width:' + c.pct + '%"></span></div><div class="omtl">Listing ' + c.pct + '% complete' + (c.todo.length ? ' · next: ' + esc(c.todo[0].toLowerCase()) : '') + '</div><div class="oact"><a href="/account/event/' + e.id + '" class="btn btn-navy">Edit</a><a href="/event/' + e.id + '" class="btn btn-line">View</a></div></div></article>'; }).join('') + '</div>' : '<div class="aempty"><p class="serif">No event yet.</p><p>Add a new event, or claim one that is already listed so you can complete it with photos and details.</p></div>')
+      + '<div class="claim"><label class="alab" for="cl-q">Already listed? Claim your event</label><input class="ain" id="cl-q" placeholder="Type the name of your event" autocomplete="off"><div id="cl-r"></div></div>'
+      + '</section>' : '')
+    + (rec.length ? '<section class="asec reveal"><div class="ahd"><div><div class="eyebrow">Picked for you</div><h2 class="sec">You might like</h2></div></div><div class="alist">' + rec.map((e) => accRow(e)).join('') + '</div></section>' : '')
+    // profile
+    + '<section class="asec reveal" id="profile"><div class="ahd"><div><div class="eyebrow">Profile</div><h2 class="sec">Your details</h2></div></div><div class="aform">'
+    + '<div class="a2"><div><label class="alab" for="pf-name">First name</label><input class="ain" id="pf-name" value="' + esc(USER.name) + '"></div><div><label class="alab" for="pf-last">Last name</label><input class="ain" id="pf-last" value="' + esc(USER.last || '') + '"></div></div>'
+    + '<label class="alab" for="pf-mail">Email address</label><input class="ain" id="pf-mail" type="email" value="' + esc(USER.email) + '">'
     + '<div class="alab">I am a…</div><div class="achips">' + ROLES.map(([k, l]) => '<button class="achip' + (USER.role === k ? ' on' : '') + '" data-act="arole" data-v="' + k + '">' + l + '</button>').join('') + '</div>'
-    + '<div class="alab">I’m interested in</div><div class="achips">' + Object.entries(TY).map(([k, v]) => '<button class="achip' + (USER.interests.includes(k) ? ' on' : '') + '" data-act="aint" data-v="' + k + '">' + v[0] + '</button>').join('') + '</div>'
+    + '<div class="alab">I’m interested in</div><div class="achips">' + Object.entries(TY).map(([k, v]) => '<button class="achip' + ((USER.interests || []).includes(k) ? ' on' : '') + '" data-act="aint" data-v="' + k + '">' + v[0] + '</button>').join('') + '</div>'
     + '<label class="acheck"><input type="checkbox" id="pf-news"' + (USER.news ? ' checked' : '') + '> Send me a short monthly email with the upcoming events</label>'
     + '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px"><button class="btn btn-navy" data-act="accsave">Save changes</button><button class="btn btn-line" data-act="signout">Sign out</button></div>'
     + '<button class="alnk adel" data-act="delacc">Delete my account</button></div></section>'
     + '</main>' + footer(false);
 }
 function accSave() {
-  USER.name = document.getElementById('pf-name').value.trim() || USER.name;
+  USER.name = document.getElementById('pf-name').value.trim() || USER.name; USER.last = document.getElementById('pf-last').value.trim();
+  const m = document.getElementById('pf-mail').value.trim().toLowerCase(); if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m) && m !== USER.email) { try { const u = users(); delete u[USER.email]; localStorage.setItem('wwc-users', JSON.stringify(u)); } catch (x) {} USER.email = m; }
   const r = document.querySelector('[data-act=arole].on'); USER.role = r ? r.dataset.v : USER.role;
   USER.interests = [...document.querySelectorAll('[data-act=aint].on')].map((b) => b.dataset.v);
   USER.news = document.getElementById('pf-news').checked; storeUser(); toast('Profile saved'); app.innerHTML = pageAccount(); observe();
+}
+async function claimEvent(id) { USER.owned = (USER.owned || []).filter((x) => x !== id).concat(id); storeUser(); toast('Listing added to My events (in the live version, 289 Consulting confirms it first).'); go('/account/event/' + id); }
+
+/* ---------- event editor (organisers) ---------- */
+let ED = null;
+function pageEditor(id) {
+  const e = byId[id];
+  if (!USER || !e || !isOwner(id)) return '<section class="dark">' + header('account') + '<div class="wrap" style="padding:96px 24px"><h1 class="big">This listing is not <em class="g">yours yet.</em></h1><p class="lead">Sign in and claim it from your account.</p><a class="btn btn-gold" href="/account" style="margin-top:28px">Go to my account</a></div></section>' + footer(false);
+  ED = { id, img: e.img, alt: e.alt, credit: e.credit, gal: (e.gal || []).map((g) => Object.assign({}, g)) };
+  const types = [['trade', 'Trade fair'], ['public', 'Public fair'], ['jewel', 'Jewellery & watches'], ['vintage', 'Vintage & collectors'], ['auction', 'Auction']];
+  const f = (lab, idd, val, attrs) => '<label class="alab" for="' + idd + '">' + lab + '</label><input class="ain" id="' + idd + '" value="' + esc(val || '') + '"' + (attrs || '') + '>';
+  const c = completion(e);
+  return '<section class="dark">' + header('account') + '<div class="wrap" style="padding-top:56px;padding-bottom:56px"><a href="/account#myevents" class="crumb in" style="text-decoration:none">← My events</a>'
+    + '<div class="in d1" style="margin-top:22px;display:flex;flex-wrap:wrap;align-items:center;gap:16px"><h1 class="big" style="margin:0;font-size:clamp(36px,5vw,60px)">' + esc(e.n) + '</h1><span class="ost big' + (e.hidden ? ' off' : '') + '">' + (e.hidden ? 'Hidden' : 'Published') + '</span></div>'
+    + '<p class="lead in d2" style="margin-top:12px">Complete your listing: visitors trust events with photos and a clear description.</p></div></section>'
+    + '<main class="wrap edw">'
+    + '<div class="edf">'
+    + '<fieldset class="eds"><legend>Essentials</legend>' + f('Event name', 'ed-n', e.n)
+    + '<div class="a2"><div>' + f('First day', 'ed-s', e.s, ' type="date"') + '</div><div>' + f('Last day', 'ed-e', e.e, ' type="date"') + '</div></div>'
+    + '<label class="acheck"><input type="checkbox" id="ed-tbc"' + (e.tbc ? ' checked' : '') + '> Dates still to be confirmed</label>'
+    + '<label class="alab" for="ed-t">Type</label><select class="ain" id="ed-t">' + types.map(([k, l]) => '<option value="' + k + '"' + (e.t === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>'
+    + f('Official website', 'ed-site', e.site, ' type="url" placeholder="https://"') + f('Organiser', 'ed-org', e.org) + '</fieldset>'
+    + '<fieldset class="eds"><legend>Place</legend>' + f('Venue', 'ed-venue', e.venue, ' placeholder="Palexpo"') + '<div class="a2"><div>' + f('City', 'ed-city', e.city, ' disabled') + '</div><div>' + f('Country', 'ed-cc', e.country, ' disabled') + '</div></div><p class="afine" style="text-align:left">To change the city, write to the 289 Consulting team: the event moves on the map.</p></fieldset>'
+    + '<fieldset class="eds"><legend>Visitors</legend>' + f('Number of exhibitors', 'ed-exh', e.exh, ' placeholder="120 exhibitors"') + f('Press or trade days', 'ed-press', e.press, ' placeholder="Press day on 4 April"')
+    + '<label class="acheck"><input type="checkbox" id="ed-closed"' + (e.closed ? ' checked' : '') + '> Trade and press only</label><label class="acheck"><input type="checkbox" id="ed-free"' + (e.free ? ' checked' : '') + '> Free entry</label></fieldset>'
+    + '<fieldset class="eds"><legend>Story</legend><label class="alab" for="ed-desc">Description</label><textarea class="ain eta" id="ed-desc" rows="7" maxlength="1500" placeholder="What makes your event worth the trip? Who exhibits, what can visitors see or buy, any highlights…">' + esc(e.desc) + '</textarea><div class="afine" style="text-align:right" id="ed-cnt">' + (e.desc || '').length + ' / 1500</div></fieldset>'
+    + '<fieldset class="eds"><legend>Photos</legend><div class="alab">Cover photo</div><label class="drop" id="ed-coverbox">' + coverInner() + '<input type="file" id="ed-cover" accept="image/*" hidden></label>'
+    + '<div class="a2"><div>' + f('Photo description (for accessibility)', 'ed-alt', e.alt) + '</div><div>' + f('Photo credit', 'ed-credit', e.credit, ' placeholder="© Organiser"') + '</div></div>'
+    + '<div class="alab">Gallery <span style="text-transform:none;letter-spacing:0">(up to 6)</span></div><div class="galed" id="ed-gal">' + galInner() + '</div></fieldset>'
+    + '</div>'
+    + '<aside class="edp"><div class="edpc"><div class="k" style="font-size:10px">Preview</div><div class="edcv" id="ed-pv"' + (e.img ? ' style="background-image:url(' + JSON.stringify(e.img).slice(1, -1).replace(/"/g, '%22') + ')"' : '') + '></div><div class="k" style="font-size:10px;margin-top:14px">' + esc(e.tl) + ' · ' + esc(e.city) + '</div><div class="serif" style="font-size:24px;margin-top:6px;line-height:1.15" id="ed-pn">' + esc(e.n) + '</div>'
+    + '<div class="omtr" style="margin-top:18px"><span style="width:' + c.pct + '%"></span></div><div class="omtl">Listing ' + c.pct + '% complete</div>' + (c.todo.length ? '<ul class="edtodo">' + c.todo.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '<p class="omtl" style="color:#3B6D11">Everything is filled in. Beautiful.</p>')
+    + '<button class="btn btn-navy" data-act="edsave" style="margin-top:22px;width:100%;justify-content:center">Save changes</button><a href="/event/' + id + '" class="btn btn-line" style="margin-top:10px;width:100%;justify-content:center">View the event page</a>'
+    + '<button class="alnk" data-act="edhide" style="display:block;margin:18px auto 0;font-size:13px">' + (e.hidden ? 'Publish again' : 'Hide from the calendar') + '</button>'
+    + (orgData().rows[id] ? '<button class="alnk adel" data-act="eddel" style="margin:12px auto 0">Delete this event</button>' : '')
+    + '</div></aside></main>' + footer(false);
+}
+function coverInner() { return ED.img ? '<img src="' + ED.img + '" alt=""><span class="dropx">Change photo</span>' : '<span class="dropi"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg><b>Add a cover photo</b><span>Click or drop an image · landscape works best</span></span>'; }
+function galInner() { return ED.gal.map((g, i) => '<div class="gth"><img src="' + g.src + '" alt=""><button data-act="edgaldel" data-i="' + i + '" aria-label="Remove photo">×</button></div>').join('') + (ED.gal.length < 6 ? '<label class="gth gadd"><span>+ Add photos</span><input type="file" id="ed-galin" accept="image/*" multiple hidden></label>' : ''); }
+function readImage(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 1400 / Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', 0.8)); }; im.onerror = rej; im.src = r.result; }; r.onerror = rej; r.readAsDataURL(file); });
+}
+async function edFiles(files, cover) {
+  const list = [...files].filter((f) => /^image\//.test(f.type)); if (!list.length) return;
+  if (cover) { ED.img = await readImage(list[0]); document.getElementById('ed-coverbox').firstChild && (document.getElementById('ed-coverbox').innerHTML = coverInner() + '<input type="file" id="ed-cover" accept="image/*" hidden>'); const pv = document.getElementById('ed-pv'); if (pv) pv.style.backgroundImage = 'url(' + ED.img + ')'; }
+  else { for (const f of list.slice(0, 6 - ED.gal.length)) ED.gal.push({ src: await readImage(f), alt: '' }); document.getElementById('ed-gal').innerHTML = galInner(); }
+}
+document.addEventListener('change', (ev) => {
+  const t = ev.target; if (!t || !t.id) return;
+  if (t.id === 'ed-cover' && t.files.length) edFiles(t.files, true);
+  if (t.id === 'ed-galin' && t.files.length) edFiles(t.files, false);
+});
+document.addEventListener('input', (ev) => {
+  const t = ev.target; if (!t || !t.id) return;
+  if (t.id === 'ed-desc') { const c = document.getElementById('ed-cnt'); if (c) c.textContent = t.value.length + ' / 1500'; }
+  if (t.id === 'ed-n') { const n = document.getElementById('ed-pn'); if (n) n.textContent = t.value; }
+  if (t.id === 'cl-q') {
+    const q = t.value.trim().toLowerCase(); const r = document.getElementById('cl-r'); if (!r) return;
+    const hits = q.length < 2 ? [] : EV.filter((e) => !e.hidden && !isOwner(e.id) && (e.n + ' ' + e.city + ' ' + (e.org || '')).toLowerCase().includes(q)).slice(0, 5);
+    r.innerHTML = hits.map((e) => '<div class="clr"><span><b>' + esc(e.n) + '</b><small>' + esc(e.city) + ' · ' + range(e.s, e.e) + '</small></span><button class="btn btn-line" data-act="claim" data-id="' + e.id + '">This is my event</button></div>').join('') + (q.length >= 2 && !hits.length ? '<p class="afine" style="text-align:left">No match. <a class="ul" href="/add">Add it as a new event</a>.</p>' : '');
+  }
+});
+['dragover', 'drop'].forEach((k) => document.addEventListener(k, (ev) => { const box = ev.target.closest && ev.target.closest('#ed-coverbox,.gadd'); if (!box) return; ev.preventDefault(); if (k === 'drop') edFiles(ev.dataTransfer.files, box.id === 'ed-coverbox'); }));
+async function edSave(extra) {
+  const v = (id) => (document.getElementById(id) || {}).value; const ck = (id) => !!(document.getElementById(id) || {}).checked;
+  const TL = { trade: 'Trade fair', public: 'Public fair', jewel: 'Jewellery & watches', vintage: 'Vintage & collectors', auction: 'Auction' };
+  const patch = { name: v('ed-n').trim() || byId[ED.id].n, start_date: v('ed-s'), end_date: v('ed-e') < v('ed-s') ? v('ed-s') : v('ed-e'), dates_tbc: ck('ed-tbc'), type: v('ed-t'), type_label: TL[v('ed-t')], website: v('ed-site').trim(), organiser: v('ed-org').trim(), venue: v('ed-venue').trim() || null,
+    exhibitors: v('ed-exh').trim() || null, press_days: v('ed-press').trim() || null, trade_only: ck('ed-closed'), free_entry: ck('ed-free'), description: v('ed-desc').trim() || null,
+    image_url: ED.img || null, image_alt: v('ed-alt').trim() || null, image_credit: v('ed-credit').trim() || null, gallery: ED.gal, updated_on: today() };
+  Object.assign(patch, extra || {});
+  const L = orgData(); if (L.rows[ED.id]) Object.assign(L.rows[ED.id], patch); else L.edits[ED.id] = Object.assign(L.edits[ED.id] || {}, patch);
+  if (!saveOrg(L)) return; await loadEvents(); toast(extra && 'hidden' in extra ? (extra.hidden ? 'Hidden from the calendar' : 'Published again') : 'Changes saved'); app.innerHTML = pageEditor(ED.id); observe();
 }
 function downloadIcs(list, name) {
   const ev = list.map((e) => ['BEGIN:VEVENT', 'UID:' + e.id + '@worldwatchcalendar', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z', 'DTSTART;VALUE=DATE:' + e.s.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + ISO(T(e.e) + DAY).replace(/-/g, ''), 'SUMMARY:' + e.n.replace(/,/g, '\\,'), 'LOCATION:' + place(e).replace(/,/g, '\\,'), 'URL:' + (e.site || ''), 'END:VEVENT'].join('\r\n'));
@@ -963,7 +1076,8 @@ function route() {
   if (p.startsWith('/event/')) { const id = decodeURIComponent(p.slice(7)); const e = byId[id]; app.innerHTML = pageEvent(id); setMeta((e ? e.n + ' · ' : 'Event not found · ') + H, e ? e.n + ': ' + range(e.s, e.e) + ', ' + place(e) + '. ' + (e.desc || 'Dates, venue and official website.') : ''); if (e) eventJsonLd(e); tickCountdown(); }
   else if (p === '/agenda') { app.innerHTML = pageAgenda(); renderAgenda(); setMeta('Agenda · ' + H, 'Month-by-month agenda of watch fairs, collector shows, auctions and watch weeks worldwide.'); }
   else if (p === '/map') { if (GLM.api) { GLM.api.destroy(); GLM.api = null; } app.innerHTML = pageMap(); updateMap(); setMeta('World map · ' + H, 'Explore watch fairs and events around the world on an interactive map.'); }
-  else if (p === '/add') { app.innerHTML = pageAdd(); window.__addT = Date.now(); setMeta('Add your event · ' + H, 'Organisers: list your watch fair or event for free in a few minutes.'); }
+  else if (p === '/add') { app.innerHTML = pageAdd(); window.__addT = Date.now(); setMeta('Add your event · ' + H, 'Organisers: list your watch fair or event for free in a few minutes.'); const f = document.getElementById('addf'); if (USER && f && f.email) f.email.value = USER.email; }
+  else if (p.startsWith('/account/event/')) { app.innerHTML = pageEditor(decodeURIComponent(p.slice(15))); setMeta('Manage your event · ' + H, ''); }
   else if (p === '/account') { app.innerHTML = pageAccount(); setMeta('Your account · ' + H, 'Your World Watch Calendar account: saved events and profile.'); }
   else if (p === '/guide') { app.innerHTML = pageGuideBody(header, footer); setMeta('How it works · ' + H, 'A two-minute guide to World Watch Calendar: the world map, the calendar, the agenda, event pages and adding your own event.'); }
   else if (p === '/about') { app.innerHTML = pageAbout(); setMeta('About · ' + H, 'A free, open calendar for the watch world. An initiative of 289 Consulting.'); }
@@ -1019,6 +1133,12 @@ document.addEventListener('click', (ev) => {
   if (a === 'accsave') { accSave(); return; }
   if (a === 'signout') { USER = null; storeUser(); toast('Signed out'); go('/'); return; }
   if (a === 'delacc') { if (t.dataset.sure) { USER = null; try { localStorage.removeItem('wwc-users'); } catch (x) {} storeUser(); toast('Account deleted'); go('/'); } else { t.dataset.sure = '1'; t.textContent = 'Click again to delete for good'; } return; }
+  if (a === 'acm') { ACM += +t.dataset.v; const g = document.getElementById('mycalg'); if (g) g.innerHTML = myCalendar(mySaved()); return; }
+  if (a === 'claim') { if (!USER) { openAuth(); return; } claimEvent(t.dataset.id); return; }
+  if (a === 'edsave') { edSave(); return; }
+  if (a === 'edhide') { edSave({ hidden: !byId[ED.id].hidden }); return; }
+  if (a === 'eddel') { if (t.dataset.sure) { const L = orgData(); delete L.rows[ED.id]; saveOrg(L); USER.owned = USER.owned.filter((x) => x !== ED.id); storeUser(); loadEvents().then(() => { toast('Event deleted'); go('/account'); }); } else { t.dataset.sure = '1'; t.textContent = 'Click again to delete for good'; } return; }
+  if (a === 'edgaldel') { ED.gal.splice(+t.dataset.i, 1); document.getElementById('ed-gal').innerHTML = galInner(); return; }
   if (a === 'tour') { ev.preventDefault(); openTour(0); return; }
   if (a === 'tnext') { openTour(TOURI + 1); return; }
   if (a === 'tprev') { openTour(TOURI - 1); return; }
