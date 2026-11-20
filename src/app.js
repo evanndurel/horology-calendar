@@ -106,7 +106,7 @@ function header(active) {
 }
 function footer(with289) {
   return '<footer class="ft"><div class="wrap ftg reveal"><div style="flex:1 1 280px;max-width:360px"><div class="serif" style="font-size:26px">World Watch Calendar</div><p style="margin:14px 0 0;font-size:14px;line-height:1.65;color:var(--muted)">The free, open calendar of watch fairs and events worldwide.</p></div>'
-    + '<nav aria-label="Explore"><span class="k" style="font-size:11px">Explore</span><a class="ul" href="/">Events</a><a class="ul" href="/agenda">Agenda</a><a class="ul" href="/map">World map</a><a class="ul" href="/guide">How it works</a><a class="ul" href="/add">Add your event</a></nav>'
+    + '<nav aria-label="Explore"><span class="k" style="font-size:11px">Explore</span><a class="ul" href="/">Events</a><a class="ul" href="/agenda">Agenda</a><a class="ul" href="/map">World map</a><a class="ul" href="/past">Past events</a><a class="ul" href="/guide">How it works</a><a class="ul" href="/add">Add your event</a></nav>'
     + '<nav aria-label="Information"><span class="k" style="font-size:11px">Information</span><a class="ul" href="/about">About</a><a class="ul" href="/legal">Legal &amp; privacy</a><a class="ul" href="' + (import.meta.env.VITE_REPO_URL || '/about') + '"' + (import.meta.env.VITE_REPO_URL ? ' target="_blank" rel="noopener"' : '') + '>Open source</a></nav></div>'
     + '<div class="wrap ftb"><span>© ' + new Date().getFullYear() + ' World Watch Calendar · Open source · <a href="/admin" style="color:inherit;text-decoration:none;opacity:.6">Admin</a></span>' + (with289 ? '<span style="font-size:12px">An initiative of 289 Consulting</span>' : '') + '</div></footer>';
 }
@@ -200,7 +200,7 @@ function renderList() {
         + (live(e) ? '<span class="tag" style="display:inline-flex;align-items:center;gap:8px;color:#7A5A1E"><span class="dot" style="width:7px;height:7px;background:#B8975A"></span>Happening now</span>' : '')
         + (e.free ? '<span class="tag" style="color:#2F6B4F">Free entry</span>' : '') + (e.closed ? '<span class="tag" style="color:var(--muted)">Trade / invitation only</span>' : '') + '</div>'
         + '<div class="rex' + (e.exh ? '' : ' none') + '" style="flex:0 0 140px;font-size:14px;color:var(--muted)">' + esc(e.exh || '—') + '</div>' + ARR + '</a>'
-        + saveBtn(e.id) + '</div>'; }).join('') + '</section>').join('') + mnav;
+        + saveBtn(e.id) + '</div>'; }).join('') + '</section>').join('') + mnav + '<div class="pastl"><a href="/past" class="ul">See past events ' + ARR + '</a></div>';
   observe();
 }
 
@@ -486,6 +486,28 @@ function addDone(ev0) {
   if (USER && isOwner(ev0.id)) { const r = document.getElementById('addroot').firstElementChild; if (r) r.insertAdjacentHTML('beforeend', '<div style="margin-top:28px"><a href="/account/event/' + ev0.id + '" class="btn btn-navy">Add photos and details ' + ARR + '</a></div>'); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+/* ---------------- PAST EVENTS ---------------- */
+let PQ = '';
+const pastList = () => EV.filter((e) => !e.hidden && e.e < today()).sort((a, b) => (a.s > b.s ? -1 : a.s < b.s ? 1 : 0));
+function pagePast() {
+  const all = pastList();
+  return '<section class="dark">' + header('past') + '<div class="wrap" style="padding-top:88px;padding-bottom:72px"><div class="eyebrow in">Archive</div><h1 class="big in d1">Past <em class="g">events.</em></h1>'
+    + '<p class="lead in d2" style="max-width:600px">The fairs, auctions and events of the last eighteen months: ' + all.length + ' events in ' + new Set(all.map((e) => e.cc)).size + ' countries, each with its dates and official link.</p></div></section>'
+    + '<main class="wrap" style="padding-top:56px;padding-bottom:120px"><div class="pastbar"><label style="flex:1 1 360px;position:relative"><span class="sr">Search past events</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6170" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" style="position:absolute;left:16px;top:15px"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input class="field" id="pq" type="search" placeholder="Search a past event, a city or an organiser" value="' + esc(PQ) + '" autocomplete="off" style="padding-left:44px;width:100%"></label><a href="/#calendar" class="btn btn-line">Upcoming events ' + ARR + '</a></div><div id="pastl"></div></main>' + footer(false);
+}
+function renderPast() {
+  const el = document.getElementById('pastl'); if (!el) return;
+  const q = PQ.trim().toLowerCase();
+  const list = pastList().filter((e) => !q || (e.n + ' ' + e.city + ' ' + e.country + ' ' + (e.org || '') + ' ' + e.tl).toLowerCase().includes(q));
+  if (!list.length) { el.innerHTML = '<div class="empty">No past event matches “' + esc(PQ) + '”.</div>'; return; }
+  const by = {}; list.forEach((e) => { const k = e.s.slice(0, 7); (by[k] = by[k] || []).push(e); });
+  el.innerHTML = Object.keys(by).map((k) => '<section class="month"><div class="mhead"><h2 class="serif">' + ML[+k.slice(5) - 1] + ' ' + k.slice(0, 4) + '</h2><span class="k">' + by[k].length + (by[k].length > 1 ? ' events' : ' event') + '</span></div>'
+    + by[k].map((e) => { const x = dm(e.s, e.e); return '<div class="row past"><a class="rowa" href="/event/' + e.id + '"><div class="date"><div class="d">' + x.days + '</div><div class="m">' + x.mon + '</div></div>'
+      + '<div class="rn" style="flex:999 1 300px;min-width:0"><div style="font-size:18px;font-weight:600">' + esc(e.n) + '</div><div style="margin-top:4px;font-size:14px;color:var(--muted)">' + esc(place(e)) + '</div></div>'
+      + '<div class="rt" style="flex:1 1 190px;display:flex;flex-direction:column;gap:6px"><span class="tag" style="color:#3A414D">' + esc(e.tl) + '</span><span class="tag" style="color:var(--muted)">Ended</span></div>' + ARR + '</a></div>'; }).join('') + '</section>').join('');
+}
+document.addEventListener('input', (ev) => { if (ev.target && ev.target.id === 'pq') { PQ = ev.target.value; renderPast(); } });
 
 /* ---------------- ABOUT ---------------- */
 function pageAbout() {
@@ -1079,6 +1101,7 @@ function route() {
   else if (p === '/add') { app.innerHTML = pageAdd(); window.__addT = Date.now(); setMeta('Add your event · ' + H, 'Organisers: list your watch fair or event for free in a few minutes.'); const f = document.getElementById('addf'); if (USER && f && f.email) f.email.value = USER.email; }
   else if (p.startsWith('/account/event/')) { app.innerHTML = pageEditor(decodeURIComponent(p.slice(15))); setMeta('Manage your event · ' + H, ''); }
   else if (p === '/account') { app.innerHTML = pageAccount(); setMeta('Your account · ' + H, 'Your World Watch Calendar account: saved events and profile.'); }
+  else if (p === '/past') { app.innerHTML = pagePast(); renderPast(); setMeta('Past events · ' + H, 'The watch fairs, auctions and events of the last eighteen months, with their dates and official links.'); }
   else if (p === '/guide') { app.innerHTML = pageGuideBody(header, footer); setMeta('How it works · ' + H, 'A two-minute guide to World Watch Calendar: the world map, the calendar, the agenda, event pages and adding your own event.'); }
   else if (p === '/about') { app.innerHTML = pageAbout(); setMeta('About · ' + H, 'A free, open calendar for the watch world. An initiative of 289 Consulting.'); }
   else if (p === '/legal') { app.innerHTML = pageLegal(); setMeta('Legal & privacy · ' + H, 'Legal notice, terms of publication and privacy policy of World Watch Calendar.'); }

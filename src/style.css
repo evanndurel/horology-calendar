@@ -753,3 +753,7 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
 .edtodo{margin:12px 0 0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.7}
 @media (max-width:900px){.acal{grid-template-columns:1fr}.edw{grid-template-columns:1fr}.edp{position:static}}
 @media (max-width:640px){.a2{grid-template-columns:1fr}.mcd{min-height:46px;padding:4px}.mce{font-size:0;height:6px;padding:0}.eds{padding:20px 18px 22px}.galed{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* past events */
+.pastl{margin-top:36px;text-align:center}.pastl a{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.pastbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.pastbar .btn{min-height:48px}
+.row.past .date .d{color:var(--muted)}
