@@ -16,6 +16,7 @@ const GLM = { ok: null, api: null, failed: false, loading: false };
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ML = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAY = 864e5;
+let USER = null; // signed-in member (prototype: stored in this browser)
 const T = (s) => Date.UTC(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8,10));
 const ISO = (t) => new Date(t).toISOString().slice(0,10);
 const today = () => ISO(Date.now());
@@ -92,6 +93,7 @@ const STAR = (on) => '<svg width="20" height="20" viewBox="0 0 24 24" fill="' + 
 function header(active) {
   const l = (h, t, k) => '<a href="' + h + '" class="nl ul' + (active === k ? ' on' : '') + '"' + (active === k ? ' aria-current="page"' : '') + '>' + t + '</a>';
   return '<header class="hd"><div class="wrap-l hdi"><a href="/" class="logo">World Watch Calendar</a><div class="hdr">'
+    + '<button class="sbtn meb" id="meb" data-act="me" aria-label="' + (USER ? 'Your account' : 'Sign in') + '" title="' + (USER ? 'Your account' : 'Sign in') + '">' + meInner() + '</button>'
     + '<button class="sbtn tourb" data-act="tour" aria-label="Take the tour of the site" title="Take the tour"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/></svg></button>'
     + '<button class="sbtn" data-act="search" aria-label="Search events (shortcut /)" title="Search (/)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>'
     + '<button class="menu" data-act="menu" aria-label="Open menu" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'
@@ -194,7 +196,7 @@ function renderList() {
         + (live(e) ? '<span class="tag" style="display:inline-flex;align-items:center;gap:8px;color:#7A5A1E"><span class="dot" style="width:7px;height:7px;background:#B8975A"></span>Happening now</span>' : '')
         + (e.free ? '<span class="tag" style="color:#2F6B4F">Free entry</span>' : '') + (e.closed ? '<span class="tag" style="color:var(--muted)">Trade / invitation only</span>' : '') + '</div>'
         + '<div class="rex' + (e.exh ? '' : ' none') + '" style="flex:0 0 140px;font-size:14px;color:var(--muted)">' + esc(e.exh || '—') + '</div>' + ARR + '</a>'
-        + '</div>'; }).join('') + '</section>').join('') + mnav;
+        + saveBtn(e.id) + '</div>'; }).join('') + '</section>').join('') + mnav;
   observe();
 }
 
@@ -226,6 +228,7 @@ function pageEvent(id) {
     + '<aside aria-label="Key facts" class="reveal r" style="--d:150ms;"flex:1 1 340px;border:1px solid var(--line);border-radius:4px;padding:36px"><div class="k">Key facts</div><dl class="facts">'
     + '<div><dt>Dates</dt><dd>' + range(e.s, e.e) + '</dd></div><div><dt>Duration</dt><dd>' + dur(e) + '</dd></div><div><dt>Venue</dt><dd>' + esc(e.venue || '—') + '</dd></div><div><dt>City</dt><dd>' + esc(e.city + ', ' + e.country) + '</dd></div><div><dt>Type</dt><dd>' + esc(e.tl) + '</dd></div><div><dt>Exhibitors</dt><dd>' + esc(e.exh || '—') + '</dd></div><div><dt>Open to</dt><dd>' + (e.closed ? 'Trade / invitation' : 'Public') + (e.free ? ' · free entry' : '') + '</dd></div><div><dt>Organiser</dt><dd>' + esc(e.org || '—') + '</dd></div></dl>'
     + (e.site ? '<a href="' + esc(e.site) + '" target="_blank" rel="noopener" class="btn btn-navy" style="margin-top:28px;width:100%;justify-content:center">Visit official website <svg class="arr" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>' : '')
+    + saveBtn(e.id, true)
     + '<div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line)"><div class="k" style="font-size:11px">Add to my calendar</div><div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><a class="act" target="_blank" rel="noopener" href="' + esc(gcal(e)) + '">Google</a><button class="act" data-act="ics" data-id="' + e.id + '">Apple</button><a class="act" target="_blank" rel="noopener" href="' + esc(outlook(e)) + '">Outlook</a></div></div>'
     + '<div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line)"><div class="k" style="font-size:11px">Share</div><div style="margin-top:12px;display:flex;gap:8px">'
     + '<a class="act round" target="_blank" rel="noopener" aria-label="Share on LinkedIn" href="https://www.linkedin.com/sharing/share-offsite/?url=' + shareUrl + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/></svg></a>'
@@ -582,6 +585,134 @@ function parallax() {
 }
 window.addEventListener('scroll', () => requestAnimationFrame(parallax), { passive: true });
 
+/* ---------------- ACCOUNTS (prototype) ----------------
+   Prototype: accounts are simulated in this browser (localStorage) so the whole journey can be shown before
+   the real sign-in (Supabase Auth, magic link) and the profiles / saved_events tables are switched on.
+   See supabase/accounts.sql for the production schema. */
+const ROLES = [['lover', 'Watch lover'], ['collector', 'Collector'], ['journalist', 'Journalist or media'], ['brand', 'Brand or retailer'], ['organiser', 'Event organiser'], ['other', 'Other']];
+let AUTHNEXT = '', AUTHMAIL = '';
+const PERSON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.4-4 4.4-6 8-6s6.6 2 8 6"/></svg>';
+const STAR2 = '<svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21l1.5-7L2 9.3l7-.8z"/></svg>';
+function users() { try { return JSON.parse(localStorage.getItem('wwc-users') || '{}'); } catch (x) { return {}; } }
+function storeUser() {
+  try { if (USER) { const u = users(); u[USER.email] = USER; localStorage.setItem('wwc-users', JSON.stringify(u)); localStorage.setItem('wwc-user', USER.email); } else localStorage.removeItem('wwc-user'); } catch (x) {}
+  renderMe();
+}
+function initials() { return USER ? (USER.name || USER.email).trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() : ''; }
+function meInner() { return USER ? '<span class="mei">' + esc(initials()) + '</span>' : PERSON; }
+function renderMe() {
+  const b = document.getElementById('meb'); if (b) { b.innerHTML = meInner(); b.title = b.ariaLabel = USER ? 'Your account' : 'Sign in'; b.classList.toggle('in', !!USER); }
+  document.querySelectorAll('[data-act=save]').forEach((x) => { const on = isSaved(x.dataset.id); x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); const l = x.querySelector('.svl'); if (l) l.textContent = on ? 'Saved to My agenda' : 'Save to My agenda'; });
+}
+const isSaved = (id) => !!(USER && USER.saved && USER.saved.includes(id));
+const mySaved = () => (USER ? USER.saved.map((id) => byId[id]).filter((e) => e && !e.hidden && e.e >= today()).sort((a, b) => (a.s < b.s ? -1 : 1)) : []);
+function saveBtn(id, big) {
+  const on = isSaved(id);
+  return big ? '<button class="btn btn-line svb" data-act="save" data-id="' + id + '" aria-pressed="' + on + '" style="margin-top:12px;width:100%;justify-content:center">' + STAR2 + '<span class="svl">' + (on ? 'Saved to My agenda' : 'Save to My agenda') + '</span></button>'
+    : '<button class="star" data-act="save" data-id="' + id + '" aria-pressed="' + on + '" aria-label="Save to My agenda" title="Save to My agenda">' + STAR2 + '</button>';
+}
+function toggleSave(id) {
+  const i = USER.saved.indexOf(id); if (i < 0) USER.saved.push(id); else USER.saved.splice(i, 1);
+  storeUser(); toast(i < 0 ? 'Saved to My agenda' : 'Removed from My agenda');
+  if (location.pathname === '/account') { app.innerHTML = pageAccount(); observe(); }
+}
+try { const em = localStorage.getItem('wwc-user'); if (em) USER = users()[em] || null; } catch (x) {}
+function openAuth(why) {
+  let o = document.getElementById('auth');
+  if (!o) { o = document.createElement('div'); o.id = 'auth'; o.className = 'tour auth'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'atitle'); o.dataset.act = 'abg'; document.body.appendChild(o); document.documentElement.style.overflow = 'hidden'; }
+  o.innerHTML = '<div class="tcard acard"><button class="tx" data-act="aclose" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="abody">'
+    + '<div class="amark" aria-hidden="true">W<i>.</i></div>'
+    + '<h2 id="atitle">' + (why === 'save' ? 'Keep this event in <em>your agenda.</em>' : 'Your watch world, <em>saved.</em>') + '</h2>'
+    + '<p>Create a free account to save events, build your own agenda and get reminders before the fairs you care about.</p>'
+    + '<button class="abtn agg" data-act="agoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>'
+    + '<div class="aor"><span>or</span></div>'
+    + '<label class="alab" for="au-email">Email address</label><input class="ain" id="au-email" type="email" autocomplete="email" placeholder="name@company.com" value="' + esc(AUTHMAIL) + '"><p class="aerr" id="aerr" role="alert"></p>'
+    + '<button class="abtn anv" data-act="aemail">Continue with email</button>'
+    + '<p class="afine">No password needed: we email you a secure link. Free, and you can delete your account anytime.</p>'
+    + '</div><div class="aproto">Prototype · accounts are simulated in this browser</div></div>';
+  setTimeout(() => { const i = document.getElementById('au-email'); if (i) i.focus(); }, 60);
+}
+function closeAuth() { const o = document.getElementById('auth'); if (!o) return; o.classList.add('out'); document.documentElement.style.overflow = ''; setTimeout(() => o.remove(), 200); }
+function authEmail() {
+  const i = document.getElementById('au-email'); const v = (i.value || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { document.getElementById('aerr').textContent = 'Enter a valid email address, like name@company.com'; i.focus(); return; }
+  AUTHMAIL = v.toLowerCase();
+  document.querySelector('#auth .abody').innerHTML = '<div class="amail" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>'
+    + '<h2 id="atitle">Check your <em>inbox.</em></h2><p>We sent a sign-in link to <b>' + esc(AUTHMAIL) + '</b>. Open it on this device to continue.</p>'
+    + '<button class="abtn anv" data-act="alink">Open the link <span class="aptag">prototype</span></button>'
+    + '<p class="afine">Wrong address? <button class="alnk" data-act="me">Use another email</button></p>';
+}
+function authSigned() {
+  const known = users()[AUTHMAIL];
+  if (known && known.name) { USER = known; finishLogin('Welcome back, ' + (USER.name.split(' ')[0]) + '.'); return; }
+  const cs = [...new Set(upcoming().map((e) => e.cc))].map((c) => [c, CN[c]]).concat([['CH', CN.CH], ['FR', CN.FR]]).filter((x, i, a) => x[1] && a.findIndex((y) => y[0] === x[0]) === i).sort((a, b) => a[1].localeCompare(b[1]));
+  document.querySelector('#auth .abody').innerHTML = '<div class="tstep">One last step</div><h2 id="atitle">Tell us <em>about you.</em></h2><p>So we can suggest the events that matter to you.</p>'
+    + '<label class="alab" for="au-name">First name</label><input class="ain" id="au-name" autocomplete="given-name" placeholder="Evann">'
+    + '<div class="alab">I am a…</div><div class="achips">' + ROLES.map(([k, l]) => '<button class="achip" data-act="arole" data-v="' + k + '">' + l + '</button>').join('') + '</div>'
+    + '<label class="alab" for="au-cc">Country</label><select class="ain" id="au-cc"><option value="">Choose…</option>' + cs.map(([c, n]) => '<option value="' + c + '">' + esc(n) + '</option>').join('') + '<option value="other">Other</option></select>'
+    + '<div class="alab">I’m interested in</div><div class="achips">' + Object.entries(TY).map(([k, v]) => '<button class="achip" data-act="aint" data-v="' + k + '">' + v[0] + '</button>').join('') + '</div>'
+    + '<label class="acheck"><input type="checkbox" id="au-news" checked> Send me a short monthly email with the upcoming events</label>'
+    + '<p class="aerr" id="aerr" role="alert"></p><button class="abtn anv" data-act="afinish">Create my account</button>';
+  setTimeout(() => { const i = document.getElementById('au-name'); if (i) i.focus(); }, 60);
+}
+function authFinish() {
+  const name = document.getElementById('au-name').value.trim(); const role = (document.querySelector('[data-act=arole].on') || {}).dataset;
+  if (!name) { document.getElementById('aerr').textContent = 'Add your first name to continue.'; document.getElementById('au-name').focus(); return; }
+  USER = { email: AUTHMAIL, name, role: role ? role.v : '', cc: document.getElementById('au-cc').value, interests: [...document.querySelectorAll('[data-act=aint].on')].map((b) => b.dataset.v), news: document.getElementById('au-news').checked, saved: [], since: today() };
+  finishLogin('Welcome, ' + name.split(' ')[0] + '.');
+}
+function finishLogin(msg) {
+  if (!USER.saved) USER.saved = [];
+  if (AUTHNEXT && !USER.saved.includes(AUTHNEXT)) { USER.saved.push(AUTHNEXT); msg += ' Event saved to My agenda.'; }
+  AUTHNEXT = ''; storeUser(); closeAuth(); toast(msg);
+  if (location.pathname === '/account') route();
+}
+function recommend() {
+  const want = new Set(USER.interests && USER.interests.length ? USER.interests : ({ journalist: ['trade', 'jewel'], collector: ['vintage', 'auction'], brand: ['trade', 'jewel'], organiser: ['trade', 'public'], lover: ['public', 'vintage'] }[USER.role] || ['trade', 'public']));
+  return upcoming().filter((e) => !isSaved(e.id) && want.has(e.t)).sort((a, b) => (b.cc === USER.cc) - (a.cc === USER.cc) || (a.s < b.s ? -1 : 1)).slice(0, 3);
+}
+function accRow(e, saved) {
+  const x = dm(e.s, e.e);
+  return '<div class="arow"><a href="/event/' + e.id + '" class="arowa"><span class="ard"><span class="serif">' + x.days + '</span><span>' + x.mon + ' ' + e.s.slice(0, 4) + '</span></span><span class="arn"><b>' + esc(e.n) + '</b><span>' + esc(e.city) + ' · ' + esc(e.tl) + '</span></span></a>' + saveBtn(e.id) + '</div>';
+}
+function pageAccount() {
+  if (!USER) {
+    return '<section class="dark">' + header('account') + '<div class="wrap" style="padding-top:88px;padding-bottom:96px"><div class="eyebrow in">Your account</div><h1 class="big in d1">Your watch world, <em class="g">saved.</em></h1><p class="lead in d2" style="max-width:560px">Save events, build your own agenda and get reminders before the fairs you care about. Free, no password.</p><button class="btn btn-gold in d3" data-act="me" style="margin-top:36px">Sign in or create an account</button></div></section>' + footer(false);
+  }
+  const mine = mySaved(); const rec = recommend(); const role = (ROLES.find((r) => r[0] === USER.role) || [, ''])[1];
+  const next = mine[0]; const days = next ? Math.max(0, Math.ceil((T(next.s) - Date.now()) / DAY)) : 0;
+  return '<section class="dark">' + header('account') + '<div class="wrap" style="padding-top:80px;padding-bottom:72px"><div class="eyebrow in">Your account</div>'
+    + '<div class="in d1" style="display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin-top:6px"><span class="abig" aria-hidden="true">' + esc(initials()) + '</span><h1 class="big" style="margin:0">Hello, <em class="g">' + esc(USER.name.split(' ')[0]) + '.</em></h1></div>'
+    + '<p class="lead in d2" style="margin-top:18px">' + [role, USER.cc && CN[USER.cc], 'member since ' + range(USER.since, USER.since)].filter(Boolean).map(esc).join(' · ') + '</p>'
+    + '<div class="astats in d3"><div><b>' + mine.length + '</b><span>saved events</span></div><div><b>' + (next ? days : '–') + '</b><span>' + (next ? 'days to ' + esc(next.n) : 'no event saved yet') + '</span></div><div><b>' + new Set(mine.map((e) => e.cc)).size + '</b><span>countries</span></div></div>'
+    + '</div></section>'
+    + '<main class="wrap apage"><div class="aproto aproto-l">Prototype · your account is simulated in this browser. The live version will use secure email sign-in.</div>'
+    + '<section class="asec reveal"><div class="ahd"><div><div class="eyebrow">My agenda</div><h2 class="sec">Your upcoming events</h2></div>' + (mine.length ? '<button class="btn btn-line" data-act="icsall">Add all to my calendar</button>' : '') + '</div>'
+    + (mine.length ? '<div class="alist">' + mine.map((e) => accRow(e, true)).join('') + '</div>' : '<div class="aempty"><p class="serif">Nothing saved yet.</p><p>Tap ★ on any event to keep it here, then add them all to your calendar in one click.</p><a href="/#calendar" class="btn btn-navy">Browse events ' + ARR + '</a></div>')
+    + '</section>'
+    + (rec.length ? '<section class="asec reveal"><div class="ahd"><div><div class="eyebrow">Picked for you</div><h2 class="sec">You might like</h2></div></div><div class="alist">' + rec.map((e) => accRow(e, false)).join('') + '</div></section>' : '')
+    + '<section class="asec reveal"><div class="ahd"><div><div class="eyebrow">Profile</div><h2 class="sec">Your details</h2></div></div><div class="aform">'
+    + '<label class="alab" for="pf-name">First name</label><input class="ain" id="pf-name" value="' + esc(USER.name) + '">'
+    + '<label class="alab" for="pf-mail">Email</label><input class="ain" id="pf-mail" value="' + esc(USER.email) + '" disabled>'
+    + '<div class="alab">I am a…</div><div class="achips">' + ROLES.map(([k, l]) => '<button class="achip' + (USER.role === k ? ' on' : '') + '" data-act="arole" data-v="' + k + '">' + l + '</button>').join('') + '</div>'
+    + '<div class="alab">I’m interested in</div><div class="achips">' + Object.entries(TY).map(([k, v]) => '<button class="achip' + (USER.interests.includes(k) ? ' on' : '') + '" data-act="aint" data-v="' + k + '">' + v[0] + '</button>').join('') + '</div>'
+    + '<label class="acheck"><input type="checkbox" id="pf-news"' + (USER.news ? ' checked' : '') + '> Send me a short monthly email with the upcoming events</label>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px"><button class="btn btn-navy" data-act="accsave">Save changes</button><button class="btn btn-line" data-act="signout">Sign out</button></div>'
+    + '<button class="alnk adel" data-act="delacc">Delete my account</button></div></section>'
+    + '</main>' + footer(false);
+}
+function accSave() {
+  USER.name = document.getElementById('pf-name').value.trim() || USER.name;
+  const r = document.querySelector('[data-act=arole].on'); USER.role = r ? r.dataset.v : USER.role;
+  USER.interests = [...document.querySelectorAll('[data-act=aint].on')].map((b) => b.dataset.v);
+  USER.news = document.getElementById('pf-news').checked; storeUser(); toast('Profile saved'); app.innerHTML = pageAccount(); observe();
+}
+function downloadIcs(list, name) {
+  const ev = list.map((e) => ['BEGIN:VEVENT', 'UID:' + e.id + '@worldwatchcalendar', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z', 'DTSTART;VALUE=DATE:' + e.s.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + ISO(T(e.e) + DAY).replace(/-/g, ''), 'SUMMARY:' + e.n.replace(/,/g, '\\,'), 'LOCATION:' + place(e).replace(/,/g, '\\,'), 'URL:' + (e.site || ''), 'END:VEVENT'].join('\r\n'));
+  const txt = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//World Watch Calendar//EN', 'X-WR-CALNAME:My watch agenda'].concat(ev, ['END:VCALENDAR']).join('\r\n');
+  const url = URL.createObjectURL(new Blob([txt], { type: 'text/calendar' })); const l = document.createElement('a'); l.href = url; l.download = name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
 /* ---------------- TOUR ---------------- */
 let TOURI = 0, tourFocus = null;
 function openTour(i) {
@@ -598,6 +729,8 @@ function closeTour() {
   setTimeout(() => o.remove(), 200); if (tourFocus && tourFocus.focus) tourFocus.focus({ preventScroll: true });
 }
 document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' && ev.target && ev.target.id === 'au-email') { ev.preventDefault(); authEmail(); return; }
+  if (ev.key === 'Escape' && document.getElementById('auth')) { closeAuth(); return; }
   if (!document.getElementById('tour')) return;
   if (ev.key === 'Escape') { ev.preventDefault(); closeTour(); }
   else if (ev.key === 'ArrowRight') { ev.preventDefault(); openTour(TOURI + 1); }
@@ -831,6 +964,7 @@ function route() {
   else if (p === '/agenda') { app.innerHTML = pageAgenda(); renderAgenda(); setMeta('Agenda · ' + H, 'Month-by-month agenda of watch fairs, collector shows, auctions and watch weeks worldwide.'); }
   else if (p === '/map') { if (GLM.api) { GLM.api.destroy(); GLM.api = null; } app.innerHTML = pageMap(); updateMap(); setMeta('World map · ' + H, 'Explore watch fairs and events around the world on an interactive map.'); }
   else if (p === '/add') { app.innerHTML = pageAdd(); window.__addT = Date.now(); setMeta('Add your event · ' + H, 'Organisers: list your watch fair or event for free in a few minutes.'); }
+  else if (p === '/account') { app.innerHTML = pageAccount(); setMeta('Your account · ' + H, 'Your World Watch Calendar account: saved events and profile.'); }
   else if (p === '/guide') { app.innerHTML = pageGuideBody(header, footer); setMeta('How it works · ' + H, 'A two-minute guide to World Watch Calendar: the world map, the calendar, the agenda, event pages and adding your own event.'); }
   else if (p === '/about') { app.innerHTML = pageAbout(); setMeta('About · ' + H, 'A free, open calendar for the watch world. An initiative of 289 Consulting.'); }
   else if (p === '/legal') { app.innerHTML = pageLegal(); setMeta('Legal & privacy · ' + H, 'Legal notice, terms of publication and privacy policy of World Watch Calendar.'); }
@@ -872,6 +1006,19 @@ document.addEventListener('click', (ev) => {
   if (a === 'sclose') { closeSearch(); return; }
   if (a === 'sgo') { goSearch(t.dataset.k, t.dataset.v); return; }
   if (a === 'menu') { const n = document.getElementById('nav'); const o = n.classList.toggle('open'); t.setAttribute('aria-expanded', o); return; }
+  if (a === 'me') { if (USER) go('/account'); else openAuth(); return; }
+  if (a === 'save') { ev.preventDefault(); const id = t.dataset.id; if (!USER) { AUTHNEXT = id; openAuth('save'); return; } toggleSave(id); return; }
+  if (a === 'abg') { if (ev.target === t) closeAuth(); return; }
+  if (a === 'aclose') { closeAuth(); return; }
+  if (a === 'aemail') { authEmail(); return; }
+  if (a === 'agoogle') { AUTHMAIL = 'you@gmail.com'; authSigned(); return; }
+  if (a === 'alink') { authSigned(); return; }
+  if (a === 'arole') { document.querySelectorAll('[data-act=arole]').forEach((b) => b.classList.toggle('on', b === t)); return; }
+  if (a === 'aint') { t.classList.toggle('on'); return; }
+  if (a === 'afinish') { authFinish(); return; }
+  if (a === 'accsave') { accSave(); return; }
+  if (a === 'signout') { USER = null; storeUser(); toast('Signed out'); go('/'); return; }
+  if (a === 'delacc') { if (t.dataset.sure) { USER = null; try { localStorage.removeItem('wwc-users'); } catch (x) {} storeUser(); toast('Account deleted'); go('/'); } else { t.dataset.sure = '1'; t.textContent = 'Click again to delete for good'; } return; }
   if (a === 'tour') { ev.preventDefault(); openTour(0); return; }
   if (a === 'tnext') { openTour(TOURI + 1); return; }
   if (a === 'tprev') { openTour(TOURI - 1); return; }
@@ -885,6 +1032,7 @@ document.addEventListener('click', (ev) => {
   if (a === 'reset') { Object.assign(F, { q: '', country: '', month: '', size: '', type: 'all', open: false, free: false, mine: false, autoMonth: true }); route(); return; }
   if (a === 'star') { const id = t.dataset.id; if (saved[id]) delete saved[id]; else saved[id] = 1; store.set(saved); toast(saved[id] ? 'Saved' : 'Removed'); if (document.getElementById('list')) renderList(); else route(); return; }
   if (a === 'copy') { try { navigator.clipboard.writeText(location.href).then(() => toast('Link copied'), () => toast('Copy the address from your browser bar')); } catch (x) { toast('Copy the address from your browser bar'); } return; }
+  if (a === 'icsall') { const l = mySaved(); if (!l.length) return; downloadIcs(l, 'my-watch-agenda.ics'); return; }
   if (a === 'ics') { const e = byId[t.dataset.id]; const txt = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//World Watch Calendar//EN', 'BEGIN:VEVENT', 'UID:' + e.id + '@worldwatchcalendar', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z', 'DTSTART;VALUE=DATE:' + e.s.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + ISO(T(e.e) + DAY).replace(/-/g, ''), 'SUMMARY:' + e.n.replace(/,/g, '\\,'), 'LOCATION:' + place(e).replace(/,/g, '\\,'), 'URL:' + (e.site || ''), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n'); const url = URL.createObjectURL(new Blob([txt], { type: 'text/calendar' })); const l = document.createElement('a'); l.href = url; l.download = e.id + '.ics'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500); return; }
   if (a === 'agprev') { A.mi--; A.sel = ''; renderAgenda(); return; }
   if (a === 'agnext') { A.mi++; A.sel = ''; renderAgenda(); return; }
