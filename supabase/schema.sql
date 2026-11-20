@@ -16,7 +16,7 @@ create table if not exists public.events (
   city_label    text check (char_length(city_label) <= 80),
   country_code  text check (country_code ~ '^[A-Z]{2}$'),
   country       text not null check (char_length(country) between 2 and 80),
-  type          text not null check (type in ('trade', 'public', 'jewel', 'vintage', 'auction')),
+  type          text not null constraint events_type_check check (type in ('fairs', 'jewel', 'award')),
   type_label    text not null check (char_length(type_label) <= 40),
   exhibitors    text check (char_length(exhibitors) <= 40),
   dates_tbc     boolean not null default false,
@@ -25,7 +25,8 @@ create table if not exists public.events (
   website       text check (website ~* '^https?://' and char_length(website) <= 300),
   organiser     text check (char_length(organiser) <= 140),
   description   text check (char_length(description) <= 600),
-  press_days    text check (char_length(press_days) <= 80),
+  press_days    text check (char_length(press_days) <= 80),   -- professional (B2B) days
+  public_days   text check (char_length(public_days) <= 80),
   image_url     text check (char_length(image_url) <= 400),
   image_credit  text check (char_length(image_credit) <= 120),
   image_alt     text check (char_length(image_alt) <= 200),
@@ -49,6 +50,8 @@ create index if not exists events_start_idx on public.events (start_date);
 create table if not exists public.submission_contacts (
   event_id   text primary key references public.events (id) on delete cascade,
   email      text not null check (email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' and char_length(email) <= 200),
+  exhibitor_email text check (exhibitor_email is null or (exhibitor_email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' and char_length(exhibitor_email) <= 200)),
+  role       text check (role is null or role in ('Brand', 'Retailer', 'Journalist', 'Content creator', 'Organiser')),
   created_at timestamptz not null default now()
 );
 

@@ -119,7 +119,7 @@ const SECTIONS = [
   ], ['Weeks with four events or more are flagged ⚡ <b>Busy week</b>.', 'From the side panel, add the event to Google Calendar in one click.'], ['/agenda', 'Open the agenda']],
   ['calendar', 'The list', 'Every upcoming event, filtered your way.', 'cal', [
     ['Search', 'Type a fair, a city or an organiser in the search field. From any page, press <kbd>/</kbd> to search straight away.'],
-    ['Filter', 'Choose a type (trade fairs, public fairs, jewellery, vintage, auctions), a country or a size.'],
+    ['Filter', 'Choose a type (fairs and shows, jewellery and watches, watch awards), a country or a size.'],
     ['Browse by month', 'Swipe through the month tabs: the number shows how many events each month holds.']
   ], ['Open any event to see its key facts and a link to the official website.'], ['/#calendar', 'Browse the list']],
   ['event', 'Event pages', 'Everything you need, and the official source.', null, [
