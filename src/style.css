@@ -646,3 +646,7 @@ kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid #CFCBC2;b
   .cev span span:last-child{font-size:11px!important}
   .callout [data-act=mall]{min-height:36px!important;font-size:10px!important;padding:0 12px!important}
 }
+/* past events */
+.pastl{margin-top:36px;text-align:center}.pastl a{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.pastbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.pastbar .btn{min-height:48px}
+.row.past .date .d{color:var(--muted)}
