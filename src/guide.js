@@ -58,7 +58,7 @@ export function guideArt(kind) {
 const CARDS = [
   ['map', '/map', '01', 'The map', 'Spin around the watch world.', ['Click a gold country to fly in', 'Pick a city to see what is on', 'Scroll to zoom, drag to explore'], 'Try the map'],
   ['ag', '/agenda', '02', 'The agenda', 'The whole year, like your own diary.', ['Each bar is an event, its length is its duration', 'Spot the busy weeks ⚡ at a glance', 'Click a bar, add it to your calendar'], 'Try the agenda'],
-  ['cal', '/#calendar', '03', 'The calendar', 'Every event, filtered your way.', ['Search a fair, a city, an organiser', 'Filter by type, country or size', 'Open any event for every detail'], 'Try the calendar']
+  ['cal', '/#calendar', '03', 'The list', 'Every event in one list, filtered your way.', ['Search a fair, a city, an organiser', 'Filter by type, country or size', 'Open any event for every detail'], 'Try the list']
 ];
 export function homeGuide() {
   return '<section class="gband" id="guide"><div class="wrap gd">'
@@ -86,7 +86,7 @@ function extra(icon, t, d) {
 const TOUR = [
   ['map', 'The map', 'Fly around the watch world. Gold countries have events: click one, pick a city, and every fair there is right in front of you. Scroll to zoom, drag to move.', '/map', 'Try the map'],
   ['ag', 'The agenda', 'The whole year as a diary. Each bar is an event, from its first to its last day. Busy weeks are flagged ⚡ and the colour legend shows or hides each type.', '/agenda', 'Try the agenda'],
-  ['cal', 'The calendar', 'Every upcoming event in one list. Search, filter by type, country or free entry, and browse month by month.', '/#calendar', 'Try the calendar'],
+  ['cal', 'The list', 'Every upcoming event in one list. Search, filter by type, country or free entry, and browse month by month.', '/#calendar', 'Try the list'],
   ['event', 'Keep and share', 'Add any event to Google, Apple or Outlook in one click, or share it with a friend on LinkedIn or WhatsApp.', null, null],
   ['add', 'Organising an event?', 'List it for free in about three minutes. It appears straight away in the calendar, the agenda and on the map.', '/add', 'Add your event']
 ];
@@ -117,11 +117,11 @@ const SECTIONS = [
     ['Move through the months', 'Use the arrows or the month strip. The strip shows how busy each month is.'],
     ['Focus', 'Hide or show event types with the colour legend. Click a bar to see the details on the side.']
   ], ['Weeks with four events or more are flagged ⚡ <b>Busy week</b>.', 'From the side panel, add the event to Google Calendar in one click.'], ['/agenda', 'Open the agenda']],
-  ['calendar', 'The calendar', 'Every upcoming event, filtered your way.', 'cal', [
+  ['calendar', 'The list', 'Every upcoming event, filtered your way.', 'cal', [
     ['Search', 'Type a fair, a city or an organiser in the search field. From any page, press <kbd>/</kbd> to search straight away.'],
     ['Filter', 'Choose a type (trade fairs, public fairs, jewellery, vintage, auctions), a country or a size.'],
     ['Browse by month', 'Swipe through the month tabs: the number shows how many events each month holds.']
-  ], ['Open any event to see its key facts and a link to the official website.'], ['/#calendar', 'Browse the calendar']],
+  ], ['Open any event to see its key facts and a link to the official website.'], ['/#calendar', 'Browse the list']],
   ['event', 'Event pages', 'Everything you need, and the official source.', null, [
     ['Key facts', 'Dates, duration, venue, type, number of exhibitors, who can attend and who organises it.'],
     ['Official website', 'Every event links to its organiser’s website: always check final details there.'],
